@@ -5,7 +5,7 @@
 'use strict';
 
 var T = require('./tinytest.js');
-var I = require('../utils/interconnect.js');
+var I = require('../src/utils/interconnect.js');
 
 /** 伪连接对象（桩），模拟 Vela system.interconnect 的 instance() */
 function fakeConn() {

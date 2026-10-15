@@ -37,8 +37,6 @@ suchmusic-band/
 │   │   ├── style.css
 │   │   └── logo.png
 │   └── assets/                # 预留小图标目录
-├── utils/                     # Node 侧薄转发（满足「纯逻辑可 node 直接 require」）
-│   └── {protocol,transfer,dedupe,mode,interconnect}.js
 ├── scripts/
 │   ├── export_cert.sh         # 从 jks 导出配套 PEM（含私钥）
 │   ├── build.sh               # 校验 manifest + 调用 AIoT-IDE 打包
@@ -53,7 +51,7 @@ suchmusic-band/
 └── README.md
 ```
 
-> **说明**：设计文档 §4.1 的运行时逻辑放在 `src/utils/`；本任务的目录规范额外要求根 `utils/` 提供可被 Node 直接 `require` 的纯逻辑模块。为避免逻辑重复（DRY），根 `utils/*.js` 仅**薄转发** `src/utils/*.js` 这一**单一真源**。
+> **说明**：运行时可 `require` 的纯逻辑模块**唯一真源**为 `src/utils/*.js`（`node test/*.test.js` 亦是**直接**引用 `../src/utils/`）。此前仓库根 `utils/` 的薄转发层已**删除**，避免「同一逻辑两处存在、易误改」的隐患（单一真源）。
 
 ---
 
@@ -195,8 +193,8 @@ sh scripts/build.sh      # 自动断言：package=com.lightningteam.suchmusic / 
 npm test                      # = node test/run.js
 node test/protocol.test.js    # 亦可单文件运行
 
-# 2) 纯逻辑模块可被 Node 直接加载
-node -e "require('./utils/protocol.js'); console.log('ok')"
+# 2) 纯逻辑模块可被 Node 直接加载（单一真源 src/utils/）
+node -e "require('./src/utils/protocol.js'); console.log('ok')"
 
 # 3) JSON 合法性
 python3 -m json.tool src/manifest.json > /dev/null && echo OK
@@ -211,7 +209,7 @@ python3 -m json.tool package.json > /dev/null && echo OK
 
 | # | 偏差 | 原因 / 处理 |
 |---|---|---|
-| D-layout | 设计文档把运行时逻辑放在 `src/utils/`；本任务额外要求根 `utils/` 提供 Node 可 `require` 的纯逻辑模块 | 采用**单一真源** `src/utils/`，根 `utils/` 仅**薄转发**（DRY），二者行为完全一致 |
+| D-layout | 设计文档把运行时逻辑放在 `src/utils/`；本任务曾额外要求根 `utils/` 提供 Node 可 `require` 的纯逻辑模块 | 采用**单一真源** `src/utils/`：测试直接引用 `../src/utils/`，并**删除**根 `utils/` 转发层（避免逻辑两处存在、易误改） |
 | D-count | 任务简述「18 个方法」，设计文档 §3.5 方法表实为 **20 个**方法名 | 以**设计文档为准**，实现全部 20 个（含 `sys.hello`/`sys.ping`/`playback.setVolume`/`cover.get`），未自创任何方法名 |
 | E1 | 搜索结果点按播放：§5③ 引用 `playAndAdd`，但 §3.5 冻结清单**无该方法名** | 为避免自创消息名，手环以 `queue.play{index}` 表达「播放第 index 条搜索结果」。**需手机端配合**：将选中搜索结果并入队列后定位；请手机端确认该约定（或补充正式方法名） |
 | E2 | 播放列表显示：§5④ 线框含歌名，但协议仅提供 `queue.{count,currentIndex}`（无「队列明细」方法） | 手环列表以 `第 N 首` 占位 + 当前项高亮；如需歌名，需新增「队列明细」方法（当前不做，避免自创） |

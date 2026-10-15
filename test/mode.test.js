@@ -5,7 +5,7 @@
 'use strict';
 
 var T = require('./tinytest.js');
-var M = require('../utils/mode.js');
+var M = require('../src/utils/mode.js');
 
 T.test('枚举值与手机 PlayMode 一致', function () {
   T.equal(M.PlayMode, { LOOP: 'loop', SINGLE: 'single', SHUFFLE: 'shuffle' });

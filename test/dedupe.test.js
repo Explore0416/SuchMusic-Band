@@ -5,7 +5,7 @@
 'use strict';
 
 var T = require('./tinytest.js');
-var D = require('../utils/dedupe.js');
+var D = require('../src/utils/dedupe.js');
 
 T.test('LRU 容量淘汰（默认 64）', function () {
   var lru = new D.Lru(64);

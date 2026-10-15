@@ -66,6 +66,7 @@ function createRpc(opts) {
   var handshakeCb = null;
   var pingTimer = null;
   var resyncTimer = null;
+  var handshaking = false;     // 本轮 HANDSHAKING 是否已发起握手（防止重复）
 
   function nextId() {
     seq = (seq + 1) & 0xffff;
@@ -369,6 +370,13 @@ function createRpc(opts) {
     sessionV = v;
     activeCaps = protocol.negotiateCaps(BAND_CAPS, payload.caps || []);
     ready = true;
+    // 【修复·同源缺陷】握手成功即推动连接状态机完成 open 阶段：
+    // helloAck → READY（冻结基线，仅在 interconnect 已实现、此处按约定触发）。
+    // 否则 FSM 会永远停在 HANDSHAKING，READY/connected 恒为假，且 readyState
+    // 轮询的断连检测（仅 READY 时才迁移 close）将失效。
+    if (link && link.fsm && typeof link.fsm.transition === 'function') {
+      link.fsm.transition('helloAck');
+    }
     if (store) {
       store.setProtoVer(v);
       store.setServerCaps(activeCaps);
@@ -434,12 +442,25 @@ function createRpc(opts) {
   function attach() {
     link.onMessage(onRawMessage);
     link.onStatus(function (info) {
-      if (info.state === 'READY' || info.connected) {
-        ready = false;
-        handshake(function () { stateGet(function () {}); });
-        startPing();
-        startResync();
+      info = info || {};
+      var st = info.state;
+      // 【修复·自引用死锁】握手触发时机应为「物理链路连上」，即状态机进入
+      // HANDSHAKING（open → HANDSHAKING），而**不是** READY —— 因为按照冻结的
+      // 协议基线，READY 只能由**握手成功**（sys.hello_ack）产生；若在此等待
+      // READY，则握手要等 READY、READY 又只能由握手产生，永远无法触发。
+      // 进入 HANDSHAKING（或对端已 READY/connected）即发起 sys.hello。
+      if (st === 'HANDSHAKING' || st === 'READY' || info.connected) {
+        if (!handshaking) {
+          handshaking = true;
+          ready = false;
+          state.set({ link: 'handshaking' });
+          handshake(function () { stateGet(function () {}); });
+          startPing();
+          startResync();
+        }
       } else {
+        // BOOT / CONNECTING：断开或重连中，允许下一轮 HANDSHAKING 重新握手
+        handshaking = false;
         ready = false;
         state.set({ link: 'connecting' });
       }

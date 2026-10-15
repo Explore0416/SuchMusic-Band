@@ -74,6 +74,43 @@ T.test('load 后能读回已写数据', function () {
   T.equal(st2.getHistory(), ['晴天']);
 });
 
+T.test('存储配额：超长关键词入库前限长，总量恒 < 2KB', function () {
+  var st = S.createStore({ adapter: fakeAdapter() });
+  st.setProtoVer(1);
+  st.setServerCaps(['playback', 'queue', 'search', 'lyric', 'playmode', 'cover', 'transfer']);
+  st.setLastMode('loop');
+
+  // 单条超长关键词（1000 CJK 字符）—— 修复前会直接越界
+  var long = new Array(1001).join('汉');
+  st.pushHistory(long);
+  var h = st.getHistory();
+  T.ok(h.length >= 1, 'history 保留至少一条');
+  T.ok(h[0].length <= S.MAX_KEYWORD_CHARS,
+    '单条关键词被截断到 <= ' + S.MAX_KEYWORD_CHARS + '（实际 ' + h[0].length + '）');
+  T.ok(st.totalBytes() < 2048, '单条超长后总量 ' + st.totalBytes() + ' 必须 < 2048');
+});
+
+T.test('存储配额：连续灌入互异超长关键词，按既定策略淘汰后总量恒 < 2KB', function () {
+  var st = S.createStore({ adapter: fakeAdapter() });
+  st.setProtoVer(1);
+  st.setServerCaps(['playback', 'queue', 'search', 'lyric', 'playmode', 'cover', 'transfer']);
+  st.setLastMode('loop');
+
+  // 互异前缀 + 300 CJK/条：截断到 128 后仍互异（避免被去重折叠），从而真正触发预算淘汰
+  var tail = new Array(301).join('汉');
+  for (var i = 0; i < 40; i++) {
+    st.pushHistory('k' + i + tail);
+    T.ok(st.totalBytes() < 2048,
+      '第 ' + (i + 1) + ' 次写入后总量 ' + st.totalBytes() + ' 必须 < 2048');
+  }
+  var h = st.getHistory();
+  T.ok(h.length >= 1, '淘汰不会清空全部历史');
+  T.ok(h.length <= S.MAX_HISTORY, 'history <= ' + S.MAX_HISTORY + '（实际 ' + h.length + '）');
+  // 5 条 128CJK 会超出 2KB → 必须发生淘汰（条数 < MAX_HISTORY）
+  T.ok(h.length < S.MAX_HISTORY, '超预算时按既定策略淘汰（实际保留 ' + h.length + ' 条）');
+  T.ok(h.every(function (x) { return x.length <= S.MAX_KEYWORD_CHARS; }), '每条均被限长');
+});
+
 T.test('estimateBytes', function () {
   T.equal(S.estimateBytes('abc'), 5); // "abc" 带引号 JSON = 5
   T.ok(S.estimateBytes('晴天') > 0);

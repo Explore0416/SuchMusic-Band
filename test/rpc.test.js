@@ -18,6 +18,8 @@ function fakeLink() {
     sent: [],
     onMessage: function (h) { this.handlers.push(h); },
     onStatus: function (h) { this.statusHandlers.push(h); },
+    /** 模拟 interconnect 状态回调（emitStatus） */
+    emitStatus: function (info) { this.statusHandlers.forEach(function (h) { h(info); }); },
     send: function (text, cb) { this.sent.push(text); if (cb) { cb({ ok: true }); } },
     getState: function () { return 'CONNECTING'; },
     /** 模拟收到一条手环→手机方向的帧（手机发来的） */
@@ -163,6 +165,54 @@ T.test('坏信封被丢弃且不抛异常', function () {
   link.deliver('{not json');
   link.deliver({ v: 1, id: 'x', type: 'req', method: 'bad.method', payload: {} });
   T.ok(true, 'no throw');
+});
+
+/* ------------------------------------------------------------------ */
+/* 回归：自动握手（attach 触发时机）                                     */
+/* 背景：attach() 曾以 info.state==='READY' || info.connected 为触发条件，*/
+/*       而 READY 只能由握手成功（sys.hello_ack）产生 → 自引用死锁，      */
+/*       自动握手永不触发。修复后应在物理链路进入 HANDSHAKING 时即握手。  */
+/* ------------------------------------------------------------------ */
+
+/** 统计已发出的 sys.hello 条数 */
+function countHello(link) {
+  return link.sent.filter(function (t) {
+    var e = JSON.parse(t);
+    return e.method === 'sys.hello';
+  }).length;
+}
+
+T.test('回归：attach 后链路进入 HANDSHAKING 应自动发出 sys.hello', function () {
+  var link = fakeLink();
+  var rpc = rpcMod.createRpc({ link: link, state: new stateMod.Store(), timers: fakeTimers(), now: function () { return 1; } });
+  rpc.attach();
+
+  // attach 本身不该发帧
+  T.equal(link.sent.length, 0, 'attach 本身不发帧');
+
+  // 物理链路连上：FSM open → HANDSHAKING（此时尚未、也不可能已是 READY）
+  link.emitStatus({ state: 'HANDSHAKING', connected: false, reconnects: 0 });
+
+  T.ok(link.sent.length >= 1, '进入 HANDSHAKING 后应有出帧');
+  var hello = JSON.parse(link.sent[link.sent.length - 1]);
+  T.equal(hello.type, 'req', '出帧 type=req');
+  T.equal(hello.method, 'sys.hello', '自动握手：sys.hello');
+  T.equal(hello.payload.role, 'band', '握手 payload.role=band');
+});
+
+T.test('回归：同一轮 HANDSHAKING 只握手一次；重连后重新握手', function () {
+  var link = fakeLink();
+  var rpc = rpcMod.createRpc({ link: link, state: new stateMod.Store(), timers: fakeTimers(), now: function () { return 1; } });
+  rpc.attach();
+
+  link.emitStatus({ state: 'HANDSHAKING', connected: false });
+  link.emitStatus({ state: 'HANDSHAKING', connected: false });
+  T.equal(countHello(link), 1, '同一轮 HANDSHAKING 只握手一次');
+
+  // 断开 → CONNECTING，再连上进入 HANDSHAKING 应重新握手
+  link.emitStatus({ state: 'CONNECTING', connected: false });
+  link.emitStatus({ state: 'HANDSHAKING', connected: false });
+  T.equal(countHello(link), 2, '断开重连后重新握手');
 });
 
 if (require.main === module) {

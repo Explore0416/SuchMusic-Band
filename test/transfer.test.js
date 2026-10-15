@@ -5,7 +5,7 @@
 'use strict';
 
 var T = require('./tinytest.js');
-var X = require('../utils/transfer.js');
+var X = require('../src/utils/transfer.js');
 
 T.test('CRC32 已知向量（123456789 → 0xCBF43926）', function () {
   T.equal(X.crc32('123456789') >>> 0, 0xCBF43926);

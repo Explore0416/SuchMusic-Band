@@ -21,11 +21,38 @@ var ALLOWED_KEYS = ['sm_protoVer', 'sm_serverCaps', 'sm_searchHistory', 'sm_last
 /** 搜索历史最大条数（§3.10） */
 var MAX_HISTORY = 5;
 
+/** 单条关键词硬上限（字符数）——入库前限长，防止单条越长导致总占用越界 */
+var MAX_KEYWORD_CHARS = 128;
+
+/** 单条能力令牌 / 模式串的硬上限（防御性限长，正常取值远小于此） */
+var MAX_CAP_CHARS = 32;
+var MAX_MODE_CHARS = 16;
+
 /** 持久化总占用上限（字节，保守 < 2KB 的硬顶） */
 var MAX_TOTAL_BYTES = 2048;
 
 /** Vela 键前缀（storage 需带前缀以防冲突） */
 var KEY_PREFIX = 'sm_';
+
+/**
+ * 截断字符串到指定字符数（按 UTF-16 码元；对 BMP 内 CJK 即为字符数）。
+ * @param {*} value
+ * @param {number} max
+ * @returns {string}
+ */
+function truncateStr(value, max) {
+  var s = value === undefined || value === null ? '' : String(value);
+  return s.length > max ? s.slice(0, max) : s;
+}
+
+/**
+ * 关键词入库前限长：去空白 + 截断到 MAX_KEYWORD_CHARS。
+ * @param {*} keyword
+ * @returns {string}
+ */
+function truncateKeyword(keyword) {
+  return truncateStr(keyword, MAX_KEYWORD_CHARS).trim();
+}
 
 /**
  * 估算 JSON 序列化后的 UTF-8 字节数（本地实现，不依赖 Buffer）。
@@ -56,6 +83,20 @@ function estimateBytes(value) {
  */
 function isAllowedKey(key) {
   return ALLOWED_KEYS.indexOf(key) !== -1;
+}
+
+/**
+ * 估算给定缓存快照的持久化总字节数（键名 + 值，均按 JSON 序列化计）。
+ * @param {object} cache
+ * @returns {number}
+ */
+function computeTotal(cache) {
+  var total = 0;
+  total += estimateBytes(KEY_PREFIX + 'sm_protoVer') + estimateBytes(String(cache.sm_protoVer));
+  total += estimateBytes(KEY_PREFIX + 'sm_serverCaps') + estimateBytes(cache.sm_serverCaps);
+  total += estimateBytes(KEY_PREFIX + 'sm_searchHistory') + estimateBytes(cache.sm_searchHistory);
+  total += estimateBytes(KEY_PREFIX + 'sm_lastMode') + estimateBytes(cache.sm_lastMode);
+  return total;
 }
 
 /**
@@ -94,14 +135,48 @@ function createStore(opts) {
     sm_lastMode: 'loop'
   };
 
+  /**
+   * 入库前归一化：对可变长值做限长/限条，防止单键越界。
+   * @param {string} key
+   * @param {*} value
+   * @returns {*}
+   */
+  function normalizeValue(key, value) {
+    if (key === 'sm_protoVer') {
+      return Number(value) || 0;
+    }
+    if (key === 'sm_serverCaps') {
+      return (value || []).slice(0, 8).map(function (c) { return truncateStr(c, MAX_CAP_CHARS); });
+    }
+    if (key === 'sm_lastMode') {
+      return truncateStr(value, MAX_MODE_CHARS);
+    }
+    if (key === 'sm_searchHistory') {
+      return (value || []).slice(0, MAX_HISTORY).map(truncateKeyword);
+    }
+    return value;
+  }
+
+  /**
+   * 全局兜底：保证持久化总占用恒 < MAX_TOTAL_BYTES。
+   * 其它键均已限长，搜索历史是唯一可变长集合；按**既定淘汰策略**
+   * （保留最新、从最旧[尾部]开始淘汰）裁剪至预算内。
+   */
+  function enforceBudget() {
+    while (cache.sm_searchHistory.length > 0 && computeTotal(cache) >= MAX_TOTAL_BYTES) {
+      cache.sm_searchHistory.pop();
+    }
+  }
+
   function write(key, value, cb) {
     if (!isAllowedKey(key)) {
       if (cb) { cb({ ok: false, error: 'E_BADREQ', message: 'key not allowed: ' + key }); }
       return;
     }
-    cache[key] = value;
+    cache[key] = normalizeValue(key, value);
+    enforceBudget();
     // 一律 JSON 序列化，保证与 load() 的 JSON.parse 读取对称
-    var payload = JSON.stringify(value);
+    var payload = JSON.stringify(cache[key]);
     adapter.set({
       key: KEY_PREFIX + key,
       data: payload,
@@ -114,6 +189,7 @@ function createStore(opts) {
     KEY_PREFIX: KEY_PREFIX,
     ALLOWED_KEYS: ALLOWED_KEYS,
     MAX_HISTORY: MAX_HISTORY,
+    MAX_KEYWORD_CHARS: MAX_KEYWORD_CHARS,
     MAX_TOTAL_BYTES: MAX_TOTAL_BYTES,
 
     /**
@@ -130,12 +206,15 @@ function createStore(opts) {
               var raw = data[KEY_PREFIX + k];
               if (raw !== undefined && raw !== null) {
                 try {
-                  cache[k] = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                  var v = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                  // 载入即归一化，防止旧版/异常数据越界
+                  cache[k] = normalizeValue(k, v);
                 } catch (e) {
                   // 忽略坏数据，保持默认
                 }
               }
             });
+            enforceBudget();
           } catch (e) {
             // ignore
           }
@@ -165,12 +244,7 @@ function createStore(opts) {
      * @returns {number}
      */
     totalBytes: function totalBytes() {
-      var total = 0;
-      total += estimateBytes(KEY_PREFIX + 'sm_protoVer') + estimateBytes(String(cache.sm_protoVer));
-      total += estimateBytes(KEY_PREFIX + 'sm_serverCaps') + estimateBytes(cache.sm_serverCaps);
-      total += estimateBytes(KEY_PREFIX + 'sm_searchHistory') + estimateBytes(cache.sm_searchHistory);
-      total += estimateBytes(KEY_PREFIX + 'sm_lastMode') + estimateBytes(cache.sm_lastMode);
-      return total;
+      return computeTotal(cache);
     },
 
     /**
@@ -215,7 +289,7 @@ function createStore(opts) {
      * @returns {string[]}
      */
     pushHistory: function pushHistory(keyword, cb) {
-      var kw = String(keyword || '').trim();
+      var kw = truncateKeyword(keyword);
       if (!kw) {
         if (cb) { cb({ ok: false, error: 'E_BADREQ' }); }
         return cache.sm_searchHistory.slice();
@@ -225,8 +299,9 @@ function createStore(opts) {
       if (list.length > MAX_HISTORY) {
         list = list.slice(0, MAX_HISTORY);
       }
+      // write 内部会限长并在超预算时按既定策略淘汰
       write('sm_searchHistory', list, cb);
-      return list.slice();
+      return cache.sm_searchHistory.slice();
     },
 
     /**
@@ -269,10 +344,12 @@ var singleton = createStore();
 module.exports = {
   ALLOWED_KEYS: ALLOWED_KEYS,
   MAX_HISTORY: MAX_HISTORY,
+  MAX_KEYWORD_CHARS: MAX_KEYWORD_CHARS,
   MAX_TOTAL_BYTES: MAX_TOTAL_BYTES,
   KEY_PREFIX: KEY_PREFIX,
   estimateBytes: estimateBytes,
   isAllowedKey: isAllowedKey,
+  computeTotal: computeTotal,
   defaultAdapter: defaultAdapter,
   createStore: createStore,
   instance: singleton

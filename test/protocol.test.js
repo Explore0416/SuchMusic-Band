@@ -6,7 +6,7 @@
 
 var T = require('./tinytest.js');
 // 通过根 utils 入口加载（满足「可在 Node 下直接 require」要求）
-var P = require('../utils/protocol.js');
+var P = require('../src/utils/protocol.js');
 
 T.test('信封编码/解码往返', function () {
   var env = { v: 1, id: 'b-7fa1-0007', type: 'req', method: 'playback.next', payload: {}, ts: 1730000000000 };
