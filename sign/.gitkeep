@@ -1,0 +1,2 @@
+# sign/ 目录用于存放由 scripts/export_cert.sh 生成的 sign.pem（含私钥）。
+# 该目录内容已被 .gitignore 忽略，切勿提交。

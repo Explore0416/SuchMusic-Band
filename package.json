@@ -1,0 +1,20 @@
+{
+  "name": "suchmusic-band",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SuchMusic 小米手环10 Vela JS 快应用端（手环 UI + interconnect 通信）",
+  "author": "SuchMusic Team",
+  "license": "MIT",
+  "scripts": {
+    "test": "node test/run.js",
+    "cert": "sh scripts/export_cert.sh",
+    "build": "sh scripts/build.sh",
+    "deploy": "sh scripts/deploy.sh",
+    "lint:json": "python3 -m json.tool src/manifest.json > /dev/null && python3 -m json.tool package.json > /dev/null && echo 'JSON OK'"
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
