@@ -60,7 +60,8 @@ jobs:
       - name: 校验产物存在
         run: |
           ls -lh dist/*.rpk
-          if [ -f dist/com.lightningteam.suchmusic.1.0.0.rpk ]; then
+          # build.sh 重签成功后会删除 debug 中间产物 → dist 仅剩同源签名包
+          if ls dist/*.rpk 2>/dev/null | grep -qv '\.debug\.'; then
             echo "已产出同源重签产物"
           else
             echo "::warning::未找到重签产物（签名 secret 可能未配置），仅产出 debug 签名 rpk（真机通信会被拒）"
@@ -79,7 +80,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/com.lightningteam.suchmusic.1.0.0.rpk
+          files: dist/*.rpk
           body: |
             手环端 SuchMusic 快应用（小米手环 10 / Vela OS）。
 

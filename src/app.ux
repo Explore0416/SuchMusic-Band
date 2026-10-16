@@ -1,12 +1,3 @@
-<template>
-  <!-- 手环快应用无全局 UI，仅承载生命周期 -->
-  <div class="hidden"></div>
-</template>
-
-<style>
-  .hidden { display: none; }
-</style>
-
 <script>
 import { createLink } from './utils/interconnect.js'
 import rpcMod from './utils/rpc.js'
@@ -17,6 +8,9 @@ import store from './utils/store.js'
  * app.ux —— 全局生命周期 + 冷启动即建连（设计文档 §4.1）
  *   onCreate：建连 + 注册事件（握手成功后自动 state.get 重同步）
  *   页面 onInit 只读取 state
+ *
+ * 说明：按 Vela 规范，app.ux **仅含 `<script>`**（不含 template/style），
+ *      与应用实例的生命周期职责一致，避免启动期渲染根节点引入的不确定性。
  */
 export default {
   data: {

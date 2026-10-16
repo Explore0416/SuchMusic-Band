@@ -19,10 +19,10 @@ python3 - <<'PY'
 import json,sys
 m=json.load(open('src/manifest.json'))
 assert m['package']=='com.lightningteam.suchmusic', 'package 必须为 com.lightningteam.suchmusic'
-assert m['config']['designWidth']==106, 'designWidth 必须为 106'
+assert m['config']['designWidth']==212, 'designWidth 必须为 212（小米手环 10 设计宽度，1 逻辑单位=1 物理像素）'
 assert 'watch' in m['deviceTypeList'], 'deviceTypeList 必须含 watch'
 feats=[f.get('name') for f in m.get('features',[])]
-for need in ['system.interconnect','system.storage','system.router','system.file']:
+for need in ['system.interconnect','system.storage','system.router']:
     assert need in feats, 'features 缺少 '+need
 for k,v in m['router']['pages'].items():
     assert 'component' in v, 'router.pages.%s 缺少必填 component'%k
@@ -70,11 +70,13 @@ if [ "$SIGN_OK" = "1" ]; then
     const root=process.cwd();
     const cert=fs.readFileSync(path.join(root,"sign/certificate.pem"),"utf8");
     const priv=fs.readFileSync(path.join(root,"sign/private.pem"),"utf8");
-    const src=path.join(root,"dist","com.lightningteam.suchmusic.debug.1.0.0.rpk");
+    const m=JSON.parse(fs.readFileSync(path.join(root,"src/manifest.json"),"utf8"));
+    const src=path.join(root,"dist",m.package+".debug."+m.versionName+".rpk");
     if(!fs.existsSync(src)){console.error("未找到待重签 rpk:",src);process.exit(1);}
     signForRpk(fs.readFileSync(src),priv,cert).then(out=>{
-      const dest=path.join(root,"dist","com.lightningteam.suchmusic.1.0.0.rpk");
+      const dest=path.join(root,"dist",m.package+"."+m.versionName+".rpk");
       fs.writeFileSync(dest,out);
+      fs.unlinkSync(src); // 删除 debug 中间产物，dist 仅保留同源正式签名包
       console.log("RESIGNED ->",dest,out.length,"bytes");
     }).catch(e=>{console.error("重签失败:",e.message);process.exit(1);});
   '
