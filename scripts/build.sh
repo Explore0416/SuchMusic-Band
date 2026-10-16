@@ -36,6 +36,15 @@ if ! command -v hap >/dev/null 2>&1; then
 fi
 echo "hap-toolkit: $(hap --version)"
 
+# hap-toolkit-xiaomi@1.9.5 未把 @babel/plugin-proposal-optional-chaining 声明为依赖，
+# 但打包器（babel-loader）会加载它 → 缺失时报 "Cannot find package ... optional-chaining"。
+# 干净环境（如 CI runner）必然缺，故此处幂等补齐。
+HAP_PKG="$(npm root -g)/hap-toolkit-xiaomi"
+if [ ! -d "$HAP_PKG/node_modules/@babel/plugin-proposal-optional-chaining" ]; then
+  echo "---- 补齐工具链缺失的 @babel/plugin-proposal-optional-chaining ----"
+  ( cd "$HAP_PKG" && npm install @babel/plugin-proposal-optional-chaining --no-save )
+fi
+
 # 3) 签名预检：手环快应用需与手机 App 同源签名，否则 system.interconnect 拒绝通信
 SIGN_OK=0
 if [ -f sign/certificate.pem ] && [ -f sign/private.pem ]; then
