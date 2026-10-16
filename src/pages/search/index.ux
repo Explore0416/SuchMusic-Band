@@ -1,0 +1,155 @@
+<template>
+  <div class="page">
+    <!-- 顶部栏 -->
+    <div class="topbar">
+      <text class="topbar-back" onclick="back">←</text>
+      <text class="topbar-title">搜索</text>
+      <text class="meta">{{ connected ? '已连接' : '未连接' }}</text>
+    </div>
+
+    <!-- 热搜（默认主路径，零输入） -->
+    <div class="col mt4">
+      <text class="meta">热搜</text>
+      <div class="row" style="flex-wrap: wrap; margin-top: 4px;">
+        <div class="chip" for="{{ hot }}" onclick="searchHot($item)">
+          <text>{{ $item }}</text>
+        </div>
+      </div>
+    </div>
+
+    <!-- 最近搜索（手环历史 ≤5） -->
+    <div class="col mt8">
+      <text class="meta">最近搜索</text>
+      <div class="col" style="margin-top: 4px;">
+        <div class="list-item" for="{{ history }}" onclick="searchHot($item)">
+          <text class="body grow ellipsis">{{ $item }}</text>
+          <text class="meta" onclick="removeHistory($item)">✕</text>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider mt8"></div>
+
+    <!-- 结果列表 -->
+    <div class="col mt4">
+      <text class="meta">结果（{{ results.length }}）</text>
+    </div>
+    <list class="list">
+      <list-item type="result" class="list-item" for="{{ results }}" onclick="playResult($index)">
+        <text class="list-index">{{ $index + 1 }}</text>
+        <div class="list-main">
+          <text class="list-title ellipsis">{{ $item.name }}</text>
+          <text class="list-sub ellipsis">{{ $item.artist }}</text>
+        </div>
+      </list-item>
+    </list>
+
+    <div class="grow" if="{{ results.length === 0 }}">
+      <text class="meta center">{{ emptyText }}</text>
+    </div>
+  </div>
+</template>
+
+<style>
+@import '../../common/style.css';
+</style>
+
+<script>
+import router from '@system.router'
+import rpcMod from '../../utils/rpc.js'
+import state from '../../utils/state.js'
+import format from '../../utils/format.js'
+import store from '../../utils/store.js'
+import consts from '../../common/const.js'
+
+export default {
+  data: {
+    connected: false,
+    hot: [],
+    history: [],
+    results: [],
+    emptyText: consts.TEXT.noResult
+  },
+
+  onInit() {
+    this._unsubState = state.subscribe(() => this.refresh())
+    this._unsubEvt = null
+    const rpc = rpcMod.getRpc()
+    if (rpc) {
+      // 监听手机「发送到手环」→ search.preset；自动以其为关键词搜索
+      this._unsubEvt = rpc.onEvent((name, payload) => {
+        if (name === 'search.preset' && payload && payload.keyword) {
+          store.instance.pushHistory(payload.keyword)
+          this.refresh()
+          this.doSearch(payload.keyword)
+        }
+      })
+      rpc.searchHot((r) => {
+        if (r.ok && r.payload && r.payload.items) {
+          state.applyEvent('search.hot', r.payload)
+        }
+      })
+    }
+    this.refresh()
+  },
+
+  onShow() {
+    this.refresh()
+  },
+
+  onDestroy() {
+    if (this._unsubState) { this._unsubState() }
+    if (this._unsubEvt) { this._unsubEvt() }
+  },
+
+  refresh() {
+    const s = state.get()
+    this.connected = s.link === 'ready'
+    this.hot = s.searchHot.slice(0, 8)
+    this.history = store.instance.getHistory()
+    this.results = s.searchResults.map((r) => ({
+      id: r.id,
+      name: format.ellipsize(r.name || '', 16),
+      artist: format.ellipsize(format.artistAlbum(r.artist, r.album), 20)
+    }))
+  },
+
+  back() { router.back() },
+
+  // 点选热搜/历史 → 搜索
+  searchHot(kw) {
+    this.doSearch(kw)
+  },
+
+  removeHistory(kw) {
+    store.instance.removeHistory(kw)
+    this.refresh()
+  },
+
+  doSearch(keyword) {
+    const rpc = rpcMod.getRpc()
+    if (!rpc || !keyword) { return }
+    store.instance.pushHistory(keyword)
+    this.emptyText = consts.TEXT.loading
+    rpc.searchSong(keyword, consts.LIMITS.searchLimit, (r) => {
+      if (r.ok && r.payload) {
+        if (r.payload.results) {
+          state.applyEvent('search.result', { results: r.payload.results })
+        }
+      } else {
+        this.emptyText = consts.TEXT.noResult
+      }
+      this.refresh()
+    })
+  },
+
+  // 选中结果 → 播放并回首页（协议缺口见 README 偏差 E1）
+  playResult(index) {
+    const rpc = rpcMod.getRpc()
+    if (!rpc) { return }
+    rpc.queuePlay(index, () => {
+      router.back()
+    })
+  }
+}
+</script>

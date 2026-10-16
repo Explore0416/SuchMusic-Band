@@ -1,0 +1,124 @@
+<template>
+  <div class="page">
+    <!-- 顶部栏：标题 + 当前曲目 -->
+    <div class="topbar">
+      <text class="topbar-back" onclick="back">←</text>
+      <text class="topbar-title">歌词</text>
+      <text class="meta ellipsis">{{ songLabel }}</text>
+    </div>
+
+    <!-- 歌词窗口（≤12 行，单行不换行） -->
+    <list class="list">
+      <list-item type="line" class="list-item" for="{{ lines }}">
+        <text class="list-index">{{ $item.current ? '▶' : '' }}</text>
+        <text class="{{ $item.current ? 'body accent' : 'caption' }} grow ellipsis">{{ $item.text }}</text>
+      </list-item>
+    </list>
+
+    <div class="grow" if="{{ lines.length === 0 }}">
+      <text class="meta center">{{ emptyText }}</text>
+    </div>
+
+    <!-- 底部进度 -->
+    <div class="col">
+      <div class="progress-track">
+        <div class="progress-fill" style="width: {{ progressWidth }};"></div>
+      </div>
+      <div class="row" style="justify-content: space-between; margin-top: 4px;">
+        <text class="meta">{{ positionText }} / {{ durationText }}</text>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style>
+@import '../../common/style.css';
+</style>
+
+<script>
+import router from '@system.router'
+import rpcMod from '../../utils/rpc.js'
+import state from '../../utils/state.js'
+import format from '../../utils/format.js'
+import consts from '../../common/const.js'
+
+export default {
+  data: {
+    songLabel: '',
+    lines: [],
+    positionText: '00:00',
+    durationText: '00:00',
+    progressWidth: '0%',
+    emptyText: consts.TEXT.noLyric
+  },
+
+  onInit() {
+    // 本窗口仅内存态，离开页面即释放（§3.9）
+    this._window = { start: 0, lines: [], songId: null }
+    this._unsub = state.subscribe(() => this.refresh())
+    this.loadWindow()
+    this.refresh()
+  },
+
+  onShow() {
+    // 回到页面时若歌曲变化则重新拉窗口
+    const s = state.get()
+    if (s.song && this._window.songId !== s.song.id) {
+      this.loadWindow()
+    }
+    this.refresh()
+  },
+
+  onDestroy() {
+    if (this._unsub) { this._unsub() }
+    this._window = { start: 0, lines: [], songId: null }
+    state.clearLyricWindow()
+  },
+
+  loadWindow() {
+    const rpc = rpcMod.getRpc()
+    const s = state.get()
+    if (!rpc || !s.song) { return }
+    const idx = s.lyric && typeof s.lyric.index === 'number' && s.lyric.index >= 0 ? s.lyric.index : 0
+    rpc.lyricWindow(s.song.id, idx, 3, 8, (r) => {
+      if (r.ok && r.payload && r.payload.lines) {
+        this._window = {
+          songId: r.payload.songId || s.song.id,
+          start: r.payload.start || 0,
+          lines: r.payload.lines
+        }
+        this.emptyText = consts.TEXT.noLyric
+      } else {
+        this._window = { start: 0, lines: [], songId: s.song ? s.song.id : null }
+        this.emptyText = consts.TEXT.noLyric
+      }
+      this.refresh()
+    })
+  },
+
+  refresh() {
+    const s = state.get()
+    this.songLabel = s.song
+      ? format.ellipsize(format.artistAlbum(s.song.name, s.song.artist), 16)
+      : ''
+    this.positionText = format.formatTime(s.positionMs)
+    this.durationText = format.formatTime(s.durationMs)
+    this.progressWidth = format.widthPercent(format.progressRatio(s.positionMs, s.durationMs))
+
+    const win = this._window
+    const cur = s.lyric ? s.lyric.index : -1
+    const out = []
+    for (let i = 0; i < win.lines.length; i++) {
+      const absIndex = win.start + i
+      out.push({
+        index: absIndex,
+        text: format.ellipsize(win.lines[i].text || '', 20),
+        current: absIndex === cur
+      })
+    }
+    this.lines = out
+  },
+
+  back() { router.back() }
+}
+</script>

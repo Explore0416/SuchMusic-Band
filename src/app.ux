@@ -1,0 +1,62 @@
+<template>
+  <!-- 手环快应用无全局 UI，仅承载生命周期 -->
+  <div class="hidden"></div>
+</template>
+
+<style>
+  .hidden { display: none; }
+</style>
+
+<script>
+import { createLink } from './utils/interconnect.js'
+import rpcMod from './utils/rpc.js'
+import state from './utils/state.js'
+import store from './utils/store.js'
+
+/**
+ * app.ux —— 全局生命周期 + 冷启动即建连（设计文档 §4.1）
+ *   onCreate：建连 + 注册事件（握手成功后自动 state.get 重同步）
+ *   页面 onInit 只读取 state
+ */
+export default {
+  data: {
+    link: null,
+    rpc: null
+  },
+
+  onCreate() {
+    // 1) 建立 interconnect 连接（单例），启动 readyState 轮询（F3）
+    const link = createLink({
+      pollIntervalMs: 2000,
+      onLog: (m) => { console.info('[link] ' + m) }
+    })
+
+    // 2) 载入受限持久化（仅 4 类键，<2KB）
+    store.instance.load(() => {})
+
+    // 3) 初始化 rpc（单例），挂载消息/状态监听；握手由 onStatus 触发
+    const rpc = rpcMod.initRpc({
+      link: link,
+      state: state,
+      store: store.instance,
+      origin: 'b',
+      onLog: (m) => { console.info('[rpc] ' + m) }
+    })
+
+    this.link = link
+    this.rpc = rpc
+
+    link.start()
+    rpc.attach()
+
+    console.info('[app] SuchMusic band app created')
+  },
+
+  onDestroy() {
+    if (this.link) {
+      this.link.stop()
+    }
+    console.info('[app] destroyed')
+  }
+}
+</script>

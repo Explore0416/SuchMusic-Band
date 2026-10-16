@@ -1,0 +1,137 @@
+<template>
+  <div class="page">
+    <!-- 顶部栏：标题 + 连接状态 -->
+    <div class="topbar">
+      <text class="topbar-title">{{ brand }}</text>
+      <div class="link-chip">
+        <div class="dot {{ connected ? 'dot-on' : 'dot-off' }}"></div>
+        <text class="link-text">{{ linkText }}</text>
+      </div>
+    </div>
+
+    <!-- 歌曲信息卡（点击进入控制页） -->
+    <div class="card row" onclick="goControl">
+      <text class="cover">♪</text>
+      <div class="col grow" style="margin-left: 8px;">
+        <text class="title-h2 ellipsis">{{ songName }}</text>
+        <text class="caption ellipsis mt4">{{ artistAlbum }}</text>
+      </div>
+    </div>
+
+    <!-- 进度条（div 宽度实现，无 Canvas） -->
+    <div class="col mt8" onclick="noop">
+      <div class="progress-track">
+        <div class="progress-fill" style="width: {{ progressWidth }};"></div>
+      </div>
+      <div class="row" style="justify-content: space-between; margin-top: 4px;">
+        <text class="meta">{{ positionText }}</text>
+        <text class="meta">{{ durationText }}</text>
+      </div>
+    </div>
+
+    <!-- 主操作行：上一首 / 播放暂停 / 下一首 -->
+    <div class="row mt8" style="justify-content: space-between;">
+      <text class="icon-btn" onclick="prev">⏮</text>
+      <div class="play-btn {{ playing ? '' : 'play-btn-off' }}" onclick="toggle">
+        <text>{{ playing ? '⏸' : '▶' }}</text>
+      </div>
+      <text class="icon-btn" onclick="next">⏭</text>
+    </div>
+
+    <div class="grow"></div>
+
+    <!-- 底部三宫格入口 -->
+    <div class="bottom-nav">
+      <div class="nav-cell" onclick="goSearch">
+        <text class="nav-label">搜索</text>
+      </div>
+      <div class="nav-cell" onclick="goMode">
+        <text class="nav-label">播放模式</text>
+      </div>
+      <div class="nav-cell" onclick="goLyric">
+        <text class="nav-label">歌词</text>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style>
+@import '../../common/style.css';
+</style>
+
+<script>
+import router from '@system.router'
+import rpcMod from '../../utils/rpc.js'
+import state from '../../utils/state.js'
+import format from '../../utils/format.js'
+import consts from '../../common/const.js'
+
+export default {
+  data: {
+    brand: consts.TEXT.brand,
+    connected: false,
+    linkText: consts.TEXT.disconnected,
+    songName: consts.TEXT.emptySong,
+    artistAlbum: consts.TEXT.emptyArtist,
+    positionText: '00:00',
+    durationText: '00:00',
+    progressWidth: '0%',
+    playing: false
+  },
+
+  onInit() {
+    this._unsub = state.subscribe(() => this.refresh())
+    this.refresh()
+  },
+
+  onShow() {
+    this.refresh()
+  },
+
+  onDestroy() {
+    if (this._unsub) { this._unsub() }
+  },
+
+  /**
+   * 从全局 state 读取并刷新视图（页面不做编解码、不直连 interconnect）。
+   */
+  refresh() {
+    const s = state.get()
+    this.connected = s.link === 'ready'
+    this.linkText = consts.LINK_TEXT[s.link] || consts.TEXT.disconnected
+    this.playing = !!s.playing
+
+    if (s.song) {
+      this.songName = format.ellipsize(s.song.name || consts.TEXT.emptySong, 20)
+      this.artistAlbum = format.ellipsize(format.artistAlbum(s.song.artist, s.song.album), 26) || consts.TEXT.emptyArtist
+    } else {
+      this.songName = consts.TEXT.emptySong
+      this.artistAlbum = consts.TEXT.emptyArtist
+    }
+    this.positionText = format.formatTime(s.positionMs)
+    this.durationText = format.formatTime(s.durationMs)
+    this.progressWidth = format.widthPercent(format.progressRatio(s.positionMs, s.durationMs))
+  },
+
+  goControl() { router.push({ uri: consts.ROUTES.CONTROL }) },
+  goSearch() { router.push({ uri: consts.ROUTES.SEARCH }) },
+  goMode() { router.push({ uri: consts.ROUTES.MODE }) },
+  goLyric() { router.push({ uri: consts.ROUTES.LYRIC }) },
+  noop() {},
+
+  toggle() {
+    const rpc = rpcMod.getRpc()
+    if (!rpc) { return }
+    // 显式 play/pause（优先于 playback.toggle，§3.5）
+    if (this.playing) { rpc.pause() } else { rpc.play() }
+  },
+  prev() {
+    const rpc = rpcMod.getRpc()
+    if (rpc) { rpc.prev() }
+  },
+  next() {
+    const rpc = rpcMod.getRpc()
+    if (rpc) { rpc.next() }
+  }
+}
+</script>
