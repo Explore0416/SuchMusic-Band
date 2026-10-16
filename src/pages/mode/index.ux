@@ -2,7 +2,7 @@
   <div class="page">
     <!-- 顶部栏 -->
     <div class="topbar">
-      <div class="topbar-back" onclick="back">←</div>
+      <text class="topbar-back" onclick="back">←</text>
       <text class="topbar-title">播放模式</text>
       <text class="meta">{{ modeGlyph }}</text>
     </div>
@@ -21,7 +21,7 @@
       <text class="meta">播放列表（{{ queueCount }}）</text>
     </div>
     <list class="list">
-      <list-item class="list-item {{ $item.current ? 'list-item-current' : '' }}"
+      <list-item type="queue" class="list-item {{ $item.current ? 'list-item-current' : '' }}"
                  for="{{ queueList }}" onclick="play($item.index)">
         <div class="{{ $item.current ? 'current-bar' : '' }}"></div>
         <text class="list-index">{{ $item.index + 1 }}</text>

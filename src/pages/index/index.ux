@@ -11,7 +11,7 @@
 
     <!-- 歌曲信息卡（点击进入控制页） -->
     <div class="card row" onclick="goControl">
-      <div class="cover">♪</div>
+      <text class="cover">♪</text>
       <div class="col grow" style="margin-left: 8px;">
         <text class="title-h2 ellipsis">{{ songName }}</text>
         <text class="caption ellipsis mt4">{{ artistAlbum }}</text>
@@ -31,11 +31,11 @@
 
     <!-- 主操作行：上一首 / 播放暂停 / 下一首 -->
     <div class="row mt8" style="justify-content: space-between;">
-      <div class="icon-btn" onclick="prev">⏮</div>
+      <text class="icon-btn" onclick="prev">⏮</text>
       <div class="play-btn {{ playing ? '' : 'play-btn-off' }}" onclick="toggle">
         <text>{{ playing ? '⏸' : '▶' }}</text>
       </div>
-      <div class="icon-btn" onclick="next">⏭</div>
+      <text class="icon-btn" onclick="next">⏭</text>
     </div>
 
     <div class="grow"></div>

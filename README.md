@@ -76,7 +76,7 @@ suchmusic-band/
 | Node.js | ≥ 14（建议 18.x） | 运行本仓库单元测试 / 构建脚本 |
 | Java `keytool` | JDK 8+ | 证书指纹核实 / jks→p12 |
 | `openssl` | 任意 | p12→PEM |
-| 小米 AIoT-IDE | 最新 | **构建 `.rpk`（专有工具链，必须本地安装）** |
+| hap-toolkit-xiaomi | 最新 | 构建 `.rpk`（**公开 npm 工具链**，命令行，无需 GUI IDE） |
 | ADB（可选） | — | 若手环开放 adb 侧载 |
 | 小米运动健康 App + 已配对的手环 10 | — | 侧载与真机联调 |
 | 「Notify for Xiaomi」App（推荐） | — | 第三方快应用侧载 |
@@ -85,7 +85,7 @@ suchmusic-band/
 
 ## 四、从零构建 `.rpk` 并侧载到小米手环 10（完整步骤）
 
-> ⚠️ **`.rpk` 构建依赖小米专有工具链（AIoT-IDE），无法在纯 CLI 沙箱/服务器完成，需用户本地执行。**
+> ℹ️ **`.rpk` 由公开 npm 工具链 `hap-toolkit-xiaomi` 命令行构建（Node ≥ 14），无需 GUI IDE**；AIoT-IDE 只是它的可视化外壳（VS Code 套壳）。仅**真机侧载**需要物理手环 10。
 
 ### 步骤 0 · 校验并导出证书（签名必须与手机 App 完全一致）
 
@@ -112,14 +112,19 @@ sh scripts/build.sh      # 自动断言：package=com.lightningteam.suchmusic / 
                          # deviceTypeList 含 watch / features 含 interconnect·storage·router·file
 ```
 
-### 步骤 2 · 用 AIoT-IDE 构建 `.rpk`
+### 步骤 2 · 构建 `.rpk`（命令行，无需 GUI IDE）
 
-```text
-1) 安装 Node.js 18.x 与 小米 AIoT-IDE
-2) AIoT-IDE → 打开本工程（工程根目录即如此 music-band/）
-3) Project Settings → Signing → 选择 sign/sign.pem，口令填入 key.properties 的 storePassword
-4) Build → Release(.rpk)
-5) 产物示例： dist/com.lightningteam.suchmusic.debug.1.0.0.rpk
+```bash
+# 2.1 安装公开工具链（Node ≥ 14）
+npm install -g hap-toolkit-xiaomi
+
+# 2.2 构建（Node 17+ 需 legacy OpenSSL：webpack 旧哈希与 OpenSSL 3 不兼容）
+cd suchmusic-band
+NODE_OPTIONS=--openssl-legacy-provider hap build
+#   产物： dist/com.lightningteam.suchmusic.debug.1.0.0.rpk
+
+# 2.3 release 版（需先导出 sign/sign.pem，见步骤 0）
+NODE_OPTIONS=--openssl-legacy-provider hap release
 ```
 
 ### 步骤 3 · 侧载到手环 10
@@ -201,7 +206,7 @@ python3 -m json.tool src/manifest.json > /dev/null && echo OK
 python3 -m json.tool package.json > /dev/null && echo OK
 ```
 
-沙箱内**无法验证**：`.rpk` 构建、`system.interconnect` 运行时、真实 BLE 分片吞吐（须真机 + 专有工具链）。
+沙箱内**可构建**：`.rpk`（`hap build`，见 §四，实测 EXIT=0）。沙箱内**无法验证**：`system.interconnect` 运行时、真实 BLE 分片吞吐（须真机）。
 
 ---
 
@@ -223,4 +228,4 @@ python3 -m json.tool package.json > /dev/null && echo OK
 - 本仓库仅含**手环端**（Vela JS 快应用）。手机端桥接（Kotlin/Dart）、Windows 端（Electron）为其它工作区职责。
 - 未修改 `/workspace/suchmusic/` 下任何文件。
 - 不引入任何第三方依赖。
-- `.rpk` 构建依赖小米专有工具链，须用户本地执行。
+- `.rpk` 由公开 npm 工具链 `hap-toolkit-xiaomi` 命令行构建；仅真机侧载需物理手环 10。

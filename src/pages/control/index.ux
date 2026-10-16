@@ -2,7 +2,7 @@
   <div class="page">
     <!-- 顶部栏 -->
     <div class="topbar">
-      <div class="topbar-back" onclick="back">←</div>
+      <text class="topbar-back" onclick="back">←</text>
       <text class="topbar-title">正在播放</text>
       <text class="meta">{{ modeGlyph }}</text>
     </div>
@@ -26,18 +26,18 @@
 
     <!-- 三个大键 -->
     <div class="row mt8" style="justify-content: space-around;">
-      <div class="icon-btn" onclick="prev">⏮</div>
+      <text class="icon-btn" onclick="prev">⏮</text>
       <div class="play-btn {{ playing ? '' : 'play-btn-off' }}" onclick="toggle">
         <text>{{ playing ? '⏸' : '▶' }}</text>
       </div>
-      <div class="icon-btn" onclick="next">⏭</div>
+      <text class="icon-btn" onclick="next">⏭</text>
     </div>
 
     <!-- 模式快捷切换 -->
     <div class="row mt8" style="justify-content: center;">
-      <div class="chip {{ mode === 'single' ? 'chip-accent' : '' }}" onclick="setSingle">单曲循环</div>
-      <div class="chip {{ mode === 'loop' ? 'chip-accent' : '' }}" onclick="setLoop">顺序</div>
-      <div class="chip {{ mode === 'shuffle' ? 'chip-accent' : '' }}" onclick="setShuffle">乱序</div>
+      <text class="chip {{ mode === 'single' ? 'chip-accent' : '' }}" onclick="setSingle">单曲循环</text>
+      <text class="chip {{ mode === 'loop' ? 'chip-accent' : '' }}" onclick="setLoop">顺序</text>
+      <text class="chip {{ mode === 'shuffle' ? 'chip-accent' : '' }}" onclick="setShuffle">乱序</text>
     </div>
 
     <div class="grow"></div>

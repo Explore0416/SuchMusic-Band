@@ -2,7 +2,7 @@
   <div class="page">
     <!-- 顶部栏 -->
     <div class="topbar">
-      <div class="topbar-back" onclick="back">←</div>
+      <text class="topbar-back" onclick="back">←</text>
       <text class="topbar-title">搜索</text>
       <text class="meta">{{ connected ? '已连接' : '未连接' }}</text>
     </div>
@@ -35,7 +35,7 @@
       <text class="meta">结果（{{ results.length }}）</text>
     </div>
     <list class="list">
-      <list-item class="list-item" for="{{ results }}" onclick="playResult($index)">
+      <list-item type="result" class="list-item" for="{{ results }}" onclick="playResult($index)">
         <text class="list-index">{{ $index + 1 }}</text>
         <div class="list-main">
           <text class="list-title ellipsis">{{ $item.name }}</text>

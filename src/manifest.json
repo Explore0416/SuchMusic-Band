@@ -15,20 +15,20 @@
     { "name": "system.file" }
   ],
   "config": {
-    "designWidth": 106,
-    "background": "#F1F2F4"
+    "logLevel": "log",
+    "designWidth": 106
   },
   "permissions": [
     { "origin": "*" }
   ],
   "router": {
-    "entry": "pages/index/index",
+    "entry": "pages/index",
     "pages": {
-      "pages/index/index": { "launchMode": "singleTask" },
-      "pages/control/index": { "launchMode": "standard" },
-      "pages/search/index": { "launchMode": "standard" },
-      "pages/mode/index": { "launchMode": "standard" },
-      "pages/lyric/index": { "launchMode": "standard" }
+      "pages/index": { "component": "index", "launchMode": "singleTask" },
+      "pages/control": { "component": "index", "launchMode": "standard" },
+      "pages/search": { "component": "index", "launchMode": "standard" },
+      "pages/mode": { "component": "index", "launchMode": "standard" },
+      "pages/lyric": { "component": "index", "launchMode": "standard" }
     }
   }
 }

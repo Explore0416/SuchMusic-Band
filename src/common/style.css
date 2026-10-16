@@ -13,7 +13,6 @@
   color: #333333;
   padding-left: 8px;
   padding-right: 8px;
-  box-sizing: border-box;
 }
 
 /* ---------------- 顶部栏 ---------------- */
@@ -32,6 +31,7 @@
   width: 22px;
   height: 22px;
   font-size: 16px;
+  line-height: 22px;
   color: #333333;
   text-align: center;
 }
@@ -57,7 +57,6 @@
   background-color: #FFFFFF;
   border-radius: 16px;
   padding: 8px;
-  box-sizing: border-box;
 }
 .card-flat {
   background-color: #FFFFFF;
@@ -84,7 +83,7 @@
 }
 .accent { color: #2F84FE; }
 .center { text-align: center; }
-.ellipsis { max-lines: 1; text-overflow: ellipsis; }
+.ellipsis { text-overflow: ellipsis; }
 
 /* ---------------- 进度条（div 宽度实现） ---------------- */
 .progress-track {
@@ -121,6 +120,7 @@
   width: 22px;
   height: 22px;
   font-size: 16px;
+  line-height: 22px;
   color: #333333;
   text-align: center;
 }
@@ -146,8 +146,8 @@
   background-color: #2F84FE;
   color: #FFFFFF;
   font-size: 16px;
-  justify-content: center;
-  align-items: center;
+  line-height: 44px;
+  text-align: center;
 }
 
 /* ---------------- 列表 ---------------- */
@@ -196,9 +196,9 @@
   padding-left: 8px;
   padding-right: 8px;
   font-size: 12px;
+  line-height: 22px;
   color: #333333;
-  justify-content: center;
-  align-items: center;
+  text-align: center;
   margin-right: 4px;
   margin-bottom: 4px;
 }

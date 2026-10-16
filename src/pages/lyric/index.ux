@@ -2,14 +2,14 @@
   <div class="page">
     <!-- 顶部栏：标题 + 当前曲目 -->
     <div class="topbar">
-      <div class="topbar-back" onclick="back">←</div>
+      <text class="topbar-back" onclick="back">←</text>
       <text class="topbar-title">歌词</text>
       <text class="meta ellipsis">{{ songLabel }}</text>
     </div>
 
     <!-- 歌词窗口（≤12 行，单行不换行） -->
     <list class="list">
-      <list-item class="list-item" for="{{ lines }}">
+      <list-item type="line" class="list-item" for="{{ lines }}">
         <text class="list-index">{{ $item.current ? '▶' : '' }}</text>
         <text class="{{ $item.current ? 'body accent' : 'caption' }} grow ellipsis">{{ $item.text }}</text>
       </list-item>
