@@ -97,37 +97,28 @@ keytool -list -v -keystore /workspace/suchmusic/android/keystore/suchmusic-relea
         -storepass "$(grep storePassword /workspace/suchmusic/android/key.properties | cut -d= -f2)" -alias suchmusic
 #     期望 SHA1: 8E:7C:55:ED:E0:65:6F:BF:36:03:AC:BB:96:CB:2C:8B:6E:06:1B:46
 
-# 0.2 导出配套 PEM（含私钥 + 证书）到 sign/sign.pem
+# 0.2 从手机 App keystore 导出「同源」签名到 sign/（双文件）
 cd suchmusic-band
 sh scripts/export_cert.sh
-#     脚本会校验 PEM 同时含 PRIVATE KEY 与 CERTIFICATE
+#     产出 sign/certificate.pem（证书） + sign/private.pem（私钥）
 ```
 
-> 🔒 `sign/sign.pem` 含私钥，已被 `.gitignore` 忽略，**请勿提交**（`git status` 不应出现 `*.pem`）。
+> 🔒 `sign/*.pem` 含私钥，已被 `.gitignore` 忽略，**请勿提交**（`git status` 不应出现 `*.pem`）。
 
-### 步骤 1 · 校验工程配置
-
-```bash
-sh scripts/build.sh      # 自动断言：package=com.lightningteam.suchmusic / designWidth=106 /
-                         # deviceTypeList 含 watch / features 含 interconnect·storage·router·file
-```
-
-### 步骤 2 · 构建 `.rpk`（命令行，无需 GUI IDE）
+### 步骤 1 · 一条命令完成「校验 + 构建 + 同源重签」
 
 ```bash
-# 2.1 安装公开工具链（Node ≥ 14）
-npm install -g hap-toolkit-xiaomi
-
-# 2.2 构建（Node 17+ 需 legacy OpenSSL：webpack 旧哈希与 OpenSSL 3 不兼容）
 cd suchmusic-band
-NODE_OPTIONS=--openssl-legacy-provider hap build
-#   产物： dist/com.lightningteam.suchmusic.debug.1.0.0.rpk
-
-# 2.3 release 版（需先导出 sign/sign.pem，见步骤 0）
-NODE_OPTIONS=--openssl-legacy-provider hap release
+sh scripts/build.sh
+#   内部：校验 manifest → 安装 hap 工具链 → hap build → 用 sign/*.pem 同源重签
+#   产物： dist/com.lightningteam.suchmusic.1.0.0.rpk（已去 debug 后缀、与手机 App 同源）
 ```
 
-### 步骤 3 · 侧载到手环 10
+> **为什么必须重签**：`hap build` 默认用工具链**内置 debug 签名**，而 `system.interconnect` 要求手环快应用与手机 App「包名 + 签名完全一致」，否则**静默拒绝**通信。`build.sh` 会自动用步骤 0 导出的同源证书完成重签。
+>
+> Node 17+ 需 `--openssl-legacy-provider`（webpack 旧哈希与 OpenSSL 3 不兼容），`build.sh` 已自动设置。
+
+### 步骤 2 · 侧载到手环 10
 
 ```text
 方式 a（推荐）：Notify for Xiaomi → 设备 → Third-party app → 上传该 .rpk
@@ -135,9 +126,23 @@ NODE_OPTIONS=--openssl-legacy-provider hap release
 方式 c：adb（若手环开放）：sh scripts/deploy.sh dist/xxx.rpk
 ```
 
-### 步骤 4 · 验证
+### 步骤 3 · 验证
 
 手环应用列表出现「**SuchMusic**」→ 打开 → **先在手机播放一首歌** → 首页应显示当前歌曲、艺人、进度。
+
+### 步骤 4（可选）· 交给 CI 自动产出
+
+本仓库内置工作流 `.github/workflows/build-rpk.yml`：push / PR / 打标签时自动**构建 + 同源重签** `.rpk`，上传为 Artifact；打 `v*` 标签时同时发布到 Release。
+
+启用同源重签需在**本仓库** Actions secrets 配置两项（值用 `scripts/print_secrets.sh` 生成）：
+
+| Secret | 内容 | 生成方式 |
+|---|---|---|
+| `BAND_SIGN_CERT_B64` | `sign/certificate.pem` 的 base64 | `sh scripts/print_secrets.sh` 输出第一段 |
+| `BAND_SIGN_KEY_B64` | `sign/private.pem` 的 base64 | `sh scripts/print_secrets.sh` 输出第二段 |
+
+> 路径：Repo → Settings → Secrets and variables → Actions → New repository secret。
+> 未配置 secret（如公开 fork）时工作流自动跳过重签，产物为 debug 签名，构建仍通过。
 
 ---
 

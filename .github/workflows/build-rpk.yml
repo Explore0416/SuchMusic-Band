@@ -1,0 +1,77 @@
+name: Build Band .rpk
+
+# 手环端快应用（.rpk）构建流水线。
+# 与手机端 APK 不同，.rpk 由**公开命令行工具链** hap-toolkit-xiaomi 构建，无需任何 GUI IDE。
+#
+# 关键：system.interconnect 要求手环快应用与手机 App「包名 + 签名完全一致」，
+#       否则会**静默拒绝**通信（不报错、只是不通）。
+#       hap build 默认用工具链内置 debug 签名，故本流水线在构建后用**同源正式证书重签**。
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # 打标签时创建 Release 需要写权限
+
+jobs:
+  build-rpk:
+    name: Build · Resign · Package
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 同源签名证书：由手机 App 的 keystore 导出（scripts/export_cert.sh），
+      # 以 base64 存入本仓库 Actions secrets（本库为私有库，安全）。
+      # 生成命令见 scripts/print_secrets.sh。
+      # 未配置 secret（如公开 fork）时自动跳过 → 产物为工具链 debug 签名，构建照常通过。
+      - name: 写入同源签名证书（来自 secrets）
+        if: ${{ secrets.BAND_SIGN_CERT_B64 != '' && secrets.BAND_SIGN_KEY_B64 != '' }}
+        run: |
+          mkdir -p sign
+          printf '%s' "${{ secrets.BAND_SIGN_CERT_B64 }}" | base64 -d > sign/certificate.pem
+          printf '%s' "${{ secrets.BAND_SIGN_KEY_B64 }}"  | base64 -d > sign/private.pem
+          echo "证书指纹（应 = 手机 App 的 8E:7C:55:...）:"
+          openssl x509 -in sign/certificate.pem -noout -fingerprint -sha1
+
+      # build.sh 内部：校验 manifest → 安装 hap 工具链 → hap build → 用 sign/*.pem 同源重签
+      - name: 构建并同源重签 .rpk
+        run: bash scripts/build.sh
+
+      - name: 校验产物存在
+        run: |
+          ls -lh dist/*.rpk
+          test -f dist/com.lightningteam.suchmusic.1.0.0.rpk \
+            || { echo "::error::重签产物缺失——签名证书可能未配置" >&2; exit 1; }
+
+      - name: 上传 .rpk 产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: suchmusic-band-rpk
+          path: dist/*.rpk
+          if-no-files-found: error
+          retention-days: 30
+
+      # 打 v* 标签时，把同源签名的 .rpk 作为 Release 资源发布，便于直接侧载到手环
+      - name: 发布 .rpk（tag）
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/com.lightningteam.suchmusic.1.0.0.rpk
+          body: |
+            手环端 SuchMusic 快应用（小米手环 10 / Vela OS）。
+
+            > 已用与手机 App **同源**的正式证书重签（`system.interconnect` 要求两端签名一致）。
+            > 侧载方式见仓库 README。

@@ -24,7 +24,6 @@ assert 'watch' in m['deviceTypeList'], 'deviceTypeList 必须含 watch'
 feats=[f.get('name') for f in m.get('features',[])]
 for need in ['system.interconnect','system.storage','system.router','system.file']:
     assert need in feats, 'features 缺少 '+need
-# 快应用规范：router.pages 每项必须含 component（缺失会导致构建崩溃 / 真机 cast 错误）
 for k,v in m['router']['pages'].items():
     assert 'component' in v, 'router.pages.%s 缺少必填 component'%k
 print('manifest OK: package=%s designWidth=%s deviceTypeList=%s'%(m['package'],m['config']['designWidth'],m['deviceTypeList']))
@@ -37,16 +36,42 @@ if ! command -v hap >/dev/null 2>&1; then
 fi
 echo "hap-toolkit: $(hap --version)"
 
-# 3) 签名检查（release 需要；debug 用默认签名）
-if [ ! -f sign/sign.pem ]; then
-  echo "!! 未找到 sign/sign.pem —— release 构建前请执行： sh scripts/export_cert.sh" >&2
-  echo "   （PEM 含私钥，不进仓库，仅本地生成；debug 构建不受影响）" >&2
+# 3) 签名预检：手环快应用需与手机 App 同源签名，否则 system.interconnect 拒绝通信
+SIGN_OK=0
+if [ -f sign/certificate.pem ] && [ -f sign/private.pem ]; then
+  SIGN_OK=1
+else
+  echo "!! 未找到 sign/certificate.pem + sign/private.pem" >&2
+  echo "   （PEM 含私钥，不进仓库，仅本地生成；debug 构建不受影响，但真机通信会被拒）" >&2
+  echo "   生成：sh scripts/export_cert.sh" >&2
 fi
 
 # 4) 构建（Node 17+ 的 OpenSSL 3 与 webpack 旧哈希不兼容，需 legacy provider）
 export NODE_OPTIONS=--openssl-legacy-provider
 echo "---- hap build ----"
 hap build
+
+# 5) 重签（同源正式签名）：hap build 默认使用工具链内置 debug 签名，须用手机 App 同源证书重签
+if [ "$SIGN_OK" = "1" ]; then
+  echo "---- 用同源正式签名重签 .rpk ----"
+  export HAP_PKG_DIR="$(npm root -g)/hap-toolkit-xiaomi/node_modules/@hap-toolkit-xiaomi/packager/lib"
+  node -e '
+    const fs=require("fs"),path=require("path");
+    const {signForRpk}=require(path.join(process.env.HAP_PKG_DIR,"index.js"));
+    const root=process.cwd();
+    const cert=fs.readFileSync(path.join(root,"sign/certificate.pem"),"utf8");
+    const priv=fs.readFileSync(path.join(root,"sign/private.pem"),"utf8");
+    const src=path.join(root,"dist","com.lightningteam.suchmusic.debug.1.0.0.rpk");
+    if(!fs.existsSync(src)){console.error("未找到待重签 rpk:",src);process.exit(1);}
+    signForRpk(fs.readFileSync(src),priv,cert).then(out=>{
+      const dest=path.join(root,"dist","com.lightningteam.suchmusic.1.0.0.rpk");
+      fs.writeFileSync(dest,out);
+      console.log("RESIGNED ->",dest,out.length,"bytes");
+    }).catch(e=>{console.error("重签失败:",e.message);process.exit(1);});
+  '
+else
+  echo "!! 跳过重签：未提供同源签名，产物为 debug 签名，真机通信会被拒" >&2
+fi
 
 echo "== 产物 =="
 ls -la dist/*.rpk 2>/dev/null || echo "（未产出 .rpk，请检查上方日志）"
