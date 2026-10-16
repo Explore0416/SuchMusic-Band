@@ -126,6 +126,8 @@ sh scripts/build.sh
 方式 c：adb（若手环开放）：sh scripts/deploy.sh dist/xxx.rpk
 ```
 
+> ⚠️ **若手环上已装过旧版本：请先卸载再安装。** Vela 会缓存旧版本，与包名相同的 rpk 仅靠 `versionCode` 递增有时不足以替换，可能仍运行旧版本（表现为启动异常）。
+
 ### 步骤 3 · 验证
 
 手环应用列表出现「**SuchMusic**」→ 打开 → **先在手机播放一首歌** → 首页应显示当前歌曲、艺人、进度。

@@ -5,13 +5,20 @@
  */
 'use strict';
 
-/** 路由（与 manifest.router 一致） */
+/**
+ * 路由（**必须与 manifest.router.pages 的 key 逐字一致**）
+ *
+ * Vela 的 `router.push({uri})` 匹配的是 manifest 中注册的页面 key
+ * （`pages/<目录>`），**不是** ux 文件路径（`pages/<目录>/index`）。
+ * 写成 `/pages/control/index` 会找不到页面、跳转静默失败。
+ * 对照真实 Vela 应用：`router.push({ uri: '/pages/detail' })`。
+ */
 var ROUTES = {
-  INDEX: '/pages/index/index',
-  CONTROL: '/pages/control/index',
-  SEARCH: '/pages/search/index',
-  MODE: '/pages/mode/index',
-  LYRIC: '/pages/lyric/index'
+  INDEX: '/pages/index',
+  CONTROL: '/pages/control',
+  SEARCH: '/pages/search',
+  MODE: '/pages/mode',
+  LYRIC: '/pages/lyric'
 };
 
 /** 品牌与文案 */

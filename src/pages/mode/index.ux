@@ -2,7 +2,7 @@
   <div class="page">
     <!-- 顶部栏 -->
     <div class="topbar">
-      <text class="topbar-back" onclick="back">←</text>
+      <text class="topbar-back" onclick="back">返回</text>
       <text class="topbar-title">播放模式</text>
       <text class="meta">{{ modeGlyph }}</text>
     </div>
@@ -10,9 +10,9 @@
     <!-- 三选一：顺序 / 单曲 / 乱序 -->
     <div class="card col" style="padding: 0;">
       <div class="list-item" for="{{ modes }}" onclick="choose($item.mode)">
-        <text class="list-index">{{ $item.selected ? '●' : '○' }}</text>
+        <div class="pick {{ $item.selected ? 'pick-on' : '' }}"></div>
         <text class="body grow">{{ $item.label }}</text>
-        <text class="meta">{{ $item.glyph }}</text>
+        <text class="meta accent">{{ $item.selected ? '使用中' : '' }}</text>
       </div>
     </div>
 
@@ -50,7 +50,7 @@ import store from '../../utils/store.js'
 export default {
   data: {
     modes: [],
-    modeGlyph: modeUtil.glyph('loop'),
+    modeGlyph: modeUtil.shortLabel('loop'),
     queueCount: 0,
     queueList: []
   },
@@ -67,7 +67,7 @@ export default {
   refresh() {
     const s = state.get()
     this.modes = modeUtil.list(s.mode)
-    this.modeGlyph = modeUtil.glyph(s.mode)
+    this.modeGlyph = modeUtil.shortLabel(s.mode)
     const q = s.queue || { count: 0, currentIndex: -1 }
     this.queueCount = q.count
     const list = []

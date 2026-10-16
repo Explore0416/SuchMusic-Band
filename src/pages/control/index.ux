@@ -2,7 +2,7 @@
   <div class="page">
     <!-- 顶部栏 -->
     <div class="topbar">
-      <text class="topbar-back" onclick="back">←</text>
+      <text class="topbar-back" onclick="back">返回</text>
       <text class="topbar-title">正在播放</text>
       <text class="meta">{{ modeGlyph }}</text>
     </div>
@@ -24,13 +24,11 @@
       </div>
     </div>
 
-    <!-- 三个大键 -->
+    <!-- 三个大键（中文文本，避免符号字形在真机不渲染） -->
     <div class="row mt8" style="justify-content: space-around;">
-      <text class="icon-btn" onclick="prev">⏮</text>
-      <div class="play-btn {{ playing ? '' : 'play-btn-off' }}" onclick="toggle">
-        <text>{{ playing ? '⏸' : '▶' }}</text>
-      </div>
-      <text class="icon-btn" onclick="next">⏭</text>
+      <text class="tbtn" onclick="prev">上一首</text>
+      <text class="tbtn tbtn-primary {{ playing ? '' : 'tbtn-off' }}" onclick="toggle">{{ playing ? '暂停' : '播放' }}</text>
+      <text class="tbtn" onclick="next">下一首</text>
     </div>
 
     <!-- 模式快捷切换 -->
@@ -73,7 +71,7 @@ export default {
     progressWidth: '0%',
     playing: false,
     mode: 'loop',
-    modeGlyph: modeUtil.glyph('loop'),
+    modeGlyph: modeUtil.shortLabel('loop'),
     queueCount: 0,
     currentIndexText: '-',
     durationMs: 0
@@ -92,7 +90,7 @@ export default {
     const s = state.get()
     this.playing = !!s.playing
     this.mode = s.mode
-    this.modeGlyph = modeUtil.glyph(s.mode)
+    this.modeGlyph = modeUtil.shortLabel(s.mode)
     this.queueCount = s.queue ? s.queue.count : 0
     const ci = s.queue ? s.queue.currentIndex : -1
     this.currentIndexText = ci >= 0 ? (ci + 1) : '-'

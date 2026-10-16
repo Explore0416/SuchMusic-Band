@@ -2,7 +2,7 @@
   <div class="page">
     <!-- 顶部栏 -->
     <div class="topbar">
-      <text class="topbar-back" onclick="back">←</text>
+      <text class="topbar-back" onclick="back">返回</text>
       <text class="topbar-title">搜索</text>
       <text class="meta">{{ connected ? '已连接' : '未连接' }}</text>
     </div>
@@ -23,7 +23,7 @@
       <div class="col" style="margin-top: 4px;">
         <div class="list-item" for="{{ history }}" onclick="searchHot($item)">
           <text class="body grow ellipsis">{{ $item }}</text>
-          <text class="meta" onclick="removeHistory($item)">✕</text>
+          <text class="meta accent" onclick="removeHistory($item)">删除</text>
         </div>
       </div>
     </div>
