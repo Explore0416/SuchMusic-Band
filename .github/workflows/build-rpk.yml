@@ -38,11 +38,18 @@ jobs:
       # 生成命令见 scripts/print_secrets.sh。
       # 未配置 secret（如公开 fork）时自动跳过 → 产物为工具链 debug 签名，构建照常通过。
       - name: 写入同源签名证书（来自 secrets）
-        if: ${{ secrets.BAND_SIGN_CERT_B64 != '' && secrets.BAND_SIGN_KEY_B64 != '' }}
+        env:
+          BAND_SIGN_CERT_B64: ${{ secrets.BAND_SIGN_CERT_B64 }}
+          BAND_SIGN_KEY_B64: ${{ secrets.BAND_SIGN_KEY_B64 }}
         run: |
+          # 注意：GitHub Actions 的 `if:` 条件不支持 secrets 上下文，故在 run 内判断。
+          if [ -z "$BAND_SIGN_CERT_B64" ] || [ -z "$BAND_SIGN_KEY_B64" ]; then
+            echo "未配置签名 secret → 跳过同源重签（产物为 debug 签名，构建照常通过）"
+            exit 0
+          fi
           mkdir -p sign
-          printf '%s' "${{ secrets.BAND_SIGN_CERT_B64 }}" | base64 -d > sign/certificate.pem
-          printf '%s' "${{ secrets.BAND_SIGN_KEY_B64 }}"  | base64 -d > sign/private.pem
+          printf '%s' "$BAND_SIGN_CERT_B64" | base64 -d > sign/certificate.pem
+          printf '%s' "$BAND_SIGN_KEY_B64"  | base64 -d > sign/private.pem
           echo "证书指纹（应 = 手机 App 的 8E:7C:55:...）:"
           openssl x509 -in sign/certificate.pem -noout -fingerprint -sha1
 
@@ -53,8 +60,11 @@ jobs:
       - name: 校验产物存在
         run: |
           ls -lh dist/*.rpk
-          test -f dist/com.lightningteam.suchmusic.1.0.0.rpk \
-            || { echo "::error::重签产物缺失——签名证书可能未配置" >&2; exit 1; }
+          if [ -f dist/com.lightningteam.suchmusic.1.0.0.rpk ]; then
+            echo "已产出同源重签产物"
+          else
+            echo "::warning::未找到重签产物（签名 secret 可能未配置），仅产出 debug 签名 rpk（真机通信会被拒）"
+          fi
 
       - name: 上传 .rpk 产物
         uses: actions/upload-artifact@v4
