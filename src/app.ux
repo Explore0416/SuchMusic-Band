@@ -5,12 +5,11 @@ import state from './utils/state.js'
 import store from './utils/store.js'
 
 /**
- * app.ux —— 全局生命周期 + 冷启动即建连（设计文档 §4.1）
- *   onCreate：建连 + 注册事件（握手成功后自动 state.get 重同步）
- *   页面 onInit 只读取 state
+ * app.ux —— 全局生命周期（仅 `<script>`，符合 Vela 规范）
  *
- * 说明：按 Vela 规范，app.ux **仅含 `<script>`**（不含 template/style），
- *      与应用实例的生命周期职责一致，避免启动期渲染根节点引入的不确定性。
+ * 设计要点：**启动绝不允许被异常阻断**。
+ *   onCreate 全流程包在 try/catch 内；任何失败都写入 state.initError，
+ *   由首页可见地呈现，而不是让应用停在启动页。
  */
 export default {
   data: {
@@ -19,38 +18,45 @@ export default {
   },
 
   onCreate() {
-    // 1) 建立 interconnect 连接（单例），启动 readyState 轮询（F3）
-    const link = createLink({
-      pollIntervalMs: 2000,
-      onLog: (m) => { console.info('[link] ' + m) }
-    })
+    try {
+      // 1) 建立 interconnect 连接（单例），启动 readyState 轮询（F3）
+      const link = createLink({
+        pollIntervalMs: 2000,
+        onLog: (m) => { console.log('[link] ' + m) }
+      })
 
-    // 2) 载入受限持久化（仅 4 类键，<2KB）
-    store.instance.load(() => {})
+      // 2) 载入受限持久化（仅 4 类键，<2KB）
+      store.instance.load(() => {})
 
-    // 3) 初始化 rpc（单例），挂载消息/状态监听；握手由 onStatus 触发
-    const rpc = rpcMod.initRpc({
-      link: link,
-      state: state,
-      store: store.instance,
-      origin: 'b',
-      onLog: (m) => { console.info('[rpc] ' + m) }
-    })
+      // 3) 初始化 rpc（单例），挂载消息/状态监听；握手由 onStatus 触发
+      const rpc = rpcMod.initRpc({
+        link: link,
+        state: state,
+        store: store.instance,
+        origin: 'b',
+        onLog: (m) => { console.log('[rpc] ' + m) }
+      })
 
-    this.link = link
-    this.rpc = rpc
+      this.link = link
+      this.rpc = rpc
 
-    link.start()
-    rpc.attach()
+      link.start()
+      rpc.attach()
 
-    console.info('[app] SuchMusic band app created')
+      state.set({ initError: '' })
+      console.log('[app] SuchMusic band app created')
+    } catch (e) {
+      const msg = (e && (e.message || e.name)) || String(e)
+      try { state.set({ initError: '启动异常：' + msg }) } catch (e2) { /* 忽略 */ }
+      console.log('[app] init error: ' + msg)
+    }
   },
 
   onDestroy() {
-    if (this.link) {
-      this.link.stop()
-    }
-    console.info('[app] destroyed')
+    try {
+      if (this.link) { this.link.stop() }
+    } catch (e) { /* 忽略 */ }
+    console.log('[app] destroyed')
   }
 }
 </script>

@@ -5,9 +5,9 @@
  * 无阴影（性能）、无 Canvas（进度条用 div 宽度实现）。
  */
 
+/* 页面根：不显式设 width/height（交给框架默认满屏，与可跑的 songbird 一致）；
+   显式 height:100% 在部分 Vela 版本下无法解析，会让根节点塌成 0 高、整页不可见 */
 .page {
-  width: 100%;
-  height: 100%;
   flex-direction: column;
   background-color: #F1F2F4;
   color: #333333;
