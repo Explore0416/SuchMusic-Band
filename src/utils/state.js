@@ -46,7 +46,10 @@ function defaultState() {
 
     // 兜底
     lastToast: '',
-    ts: 0
+    ts: 0,
+
+    // 启动诊断：app.onCreate 若抛异常，写入此处，首页可见（正常为空串）
+    initError: ''
   };
 }
 

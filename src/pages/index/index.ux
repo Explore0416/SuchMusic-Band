@@ -9,6 +9,11 @@
       </div>
     </div>
 
+    <!-- 启动异常提示（正常为空，不占位） -->
+    <div class="row" if="{{ initError }}">
+      <text class="caption" style="color: #E94560;">{{ initError }}</text>
+    </div>
+
     <!-- 歌曲信息卡（点击进入控制页） -->
     <div class="card row" onclick="goControl">
       <text class="cover">曲</text>
@@ -75,7 +80,8 @@ export default {
     positionText: '00:00',
     durationText: '00:00',
     progressWidth: '0%',
-    playing: false
+    playing: false,
+    initError: ''
   },
 
   onInit() {
@@ -99,6 +105,7 @@ export default {
     this.connected = s.link === 'ready'
     this.linkText = consts.LINK_TEXT[s.link] || consts.TEXT.disconnected
     this.playing = !!s.playing
+    this.initError = s.initError || ''
 
     if (s.song) {
       this.songName = format.ellipsize(s.song.name || consts.TEXT.emptySong, 20)
