@@ -197,32 +197,34 @@ function createStore(opts) {
      * @param {function(object):void} cb
      */
     load: function load(cb) {
-      adapter.get({
-        key: ALLOWED_KEYS.map(function (k) { return KEY_PREFIX + k; }),
-        success: function (res) {
-          try {
-            var data = res && res.data ? res.data : {};
-            ALLOWED_KEYS.forEach(function (k) {
-              var raw = data[KEY_PREFIX + k];
+      // Vela 的 storage.get 只接受**字符串 key**：传数组会被参数转换拒绝
+      // （官方模拟器实测日志："convert argument 0 failed!"），故逐键读取。
+      var total = ALLOWED_KEYS.length;
+      var done = 0;
+      var finish = function () {
+        done++;
+        if (done < total) { return; }
+        enforceBudget();
+        if (cb) { cb({ ok: true, data: store.snapshot() }); }
+      };
+      ALLOWED_KEYS.forEach(function (k) {
+        adapter.get({
+          key: KEY_PREFIX + k,
+          success: function (res) {
+            try {
+              var raw = res && res.data;
               if (raw !== undefined && raw !== null) {
-                try {
-                  var v = typeof raw === 'string' ? JSON.parse(raw) : raw;
-                  // 载入即归一化，防止旧版/异常数据越界
-                  cache[k] = normalizeValue(k, v);
-                } catch (e) {
-                  // 忽略坏数据，保持默认
-                }
+                var v = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                // 载入即归一化，防止旧版/异常数据越界
+                cache[k] = normalizeValue(k, v);
               }
-            });
-            enforceBudget();
-          } catch (e) {
-            // ignore
-          }
-          if (cb) { cb({ ok: true, data: store.snapshot() }); }
-        },
-        fail: function () {
-          if (cb) { cb({ ok: false, error: 'E_INTERNAL', data: store.snapshot() }); }
-        }
+            } catch (e) {
+              // 忽略坏数据，保持默认
+            }
+            finish();
+          },
+          fail: function () { finish(); }
+        });
       });
     },
 
@@ -321,16 +323,20 @@ function createStore(opts) {
      * @param {function(object):void} [cb]
      */
     clear: function clear(cb) {
-      adapter.delete({
-        key: ALLOWED_KEYS.map(function (k) { return KEY_PREFIX + k; }),
-        success: function () {
-          cache.sm_protoVer = 0;
-          cache.sm_serverCaps = [];
-          cache.sm_searchHistory = [];
-          cache.sm_lastMode = 'loop';
-          if (cb) { cb({ ok: true }); }
-        },
-        fail: function () { if (cb) { cb({ ok: false, error: 'E_INTERNAL' }); } }
+      // 同 load：storage.delete 也只接受字符串 key，逐键删除
+      var total = ALLOWED_KEYS.length;
+      var done = 0;
+      var finish = function () {
+        done++;
+        if (done < total) { return; }
+        cache.sm_protoVer = 0;
+        cache.sm_serverCaps = [];
+        cache.sm_searchHistory = [];
+        cache.sm_lastMode = 'loop';
+        if (cb) { cb({ ok: true }); }
+      };
+      ALLOWED_KEYS.forEach(function (k) {
+        adapter.delete({ key: KEY_PREFIX + k, success: finish, fail: finish });
       });
     }
   };

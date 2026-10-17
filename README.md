@@ -76,7 +76,7 @@ suchmusic-band/
 | Node.js | ≥ 14（建议 18.x） | 运行本仓库单元测试 / 构建脚本 |
 | Java `keytool` | JDK 8+ | 证书指纹核实 / jks→p12 |
 | `openssl` | 任意 | p12→PEM |
-| hap-toolkit-xiaomi | 最新 | 构建 `.rpk`（**公开 npm 工具链**，命令行，无需 GUI IDE） |
+| aiot-toolkit（含 @aiot-toolkit/jsc） | 2.0.5 | 构建 `.rpk`（**官方 Vela 工具链**，产出 `.jsc` 字节码） |
 | ADB（可选） | — | 若手环开放 adb 侧载 |
 | 小米运动健康 App + 已配对的手环 10 | — | 侧载与真机联调 |
 | 「Notify for Xiaomi」App（推荐） | — | 第三方快应用侧载 |
@@ -85,7 +85,7 @@ suchmusic-band/
 
 ## 四、从零构建 `.rpk` 并侧载到小米手环 10（完整步骤）
 
-> ℹ️ **`.rpk` 由公开 npm 工具链 `hap-toolkit-xiaomi` 命令行构建（Node ≥ 14），无需 GUI IDE**；AIoT-IDE 只是它的可视化外壳（VS Code 套壳）。仅**真机侧载**需要物理手环 10。
+> ℹ️ **`.rpk` 必须用官方 `aiot-toolkit` 构建并开 `--enable-jsc`**：手环运行的是 **aiot 字节码（`.jsc`）**，用手机端的 `hap-toolkit`（只产 `.js`）打出的包会**卡在启动页**。`build.sh` 已固化正确链路。仅**真机侧载**需要物理手环 10。
 
 ### 步骤 0 · 校验并导出证书（签名必须与手机 App 完全一致）
 
@@ -235,4 +235,4 @@ python3 -m json.tool package.json > /dev/null && echo OK
 - 本仓库仅含**手环端**（Vela JS 快应用）。手机端桥接（Kotlin/Dart）、Windows 端（Electron）为其它工作区职责。
 - 未修改 `/workspace/suchmusic/` 下任何文件。
 - 不引入任何第三方依赖。
-- `.rpk` 由公开 npm 工具链 `hap-toolkit-xiaomi` 命令行构建；仅真机侧载需物理手环 10。
+- `.rpk` 由官方 `aiot-toolkit` 命令行构建（`--enable-jsc`，产出 `.jsc` 字节码）；仅真机侧载需物理手环 10。

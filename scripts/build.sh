@@ -1,17 +1,23 @@
 #!/usr/bin/env bash
 #
-# build.sh —— 构建 .rpk（命令行，无需 GUI IDE）
+# build.sh —— 构建手环 .rpk（官方 aiot 工具链）
 #
-# 事实：快应用 .rpk 由**公开 npm 工具链 hap-toolkit-xiaomi** 构建，
-#       AIoT-IDE 仅是它的可视化外壳（VS Code 套壳）。
-#       真机侧载仍需物理手环 10（物理限制），但构建本身纯 CLI 可完成。
+# 关键事实（已用官方 Vela 模拟器实测确认）：
+#   手环运行的是 **aiot 字节码（.jsc）**，由官方 aiot-toolkit 产出；
+#   手机的 hap-toolkit 只产 **.js**，手环运行时不认 → 应用会卡在启动页。
+#   因此这里必须用 aiot，并显式开 --enable-jsc。
+#
+# 签名：手环快应用必须与手机 App「包名 + 签名完全一致」，否则 system.interconnect
+#       会静默拒绝通信。sign/certificate.pem + sign/private.pem 由
+#       scripts/export_cert.sh 从手机 keystore 导出；存在时用 `aiot release`
+#       出正式签名包，否则回退 `aiot build`（调试签名）。
 #
 set -eu
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT_DIR"
 
-echo "== SuchMusic 手环端构建 =="
+echo "== SuchMusic 手环端构建（aiot 工具链）=="
 
 # 1) 前置校验：manifest 包名 / designWidth / router 规范
 echo "---- 校验 manifest ----"
@@ -19,7 +25,7 @@ python3 - <<'PY'
 import json,sys
 m=json.load(open('src/manifest.json'))
 assert m['package']=='com.lightningteam.suchmusic', 'package 必须为 com.lightningteam.suchmusic'
-assert m['config']['designWidth']==212, 'designWidth 必须为 212（小米手环 10 设计宽度，1 逻辑单位=1 物理像素）'
+assert m['config']['designWidth']==212, 'designWidth 必须为 212（小米手环 10 设计宽度）'
 assert 'watch' in m['deviceTypeList'], 'deviceTypeList 必须含 watch'
 feats=[f.get('name') for f in m.get('features',[])]
 for need in ['system.interconnect','system.storage','system.router']:
@@ -29,23 +35,18 @@ for k,v in m['router']['pages'].items():
 print('manifest OK: package=%s designWidth=%s deviceTypeList=%s'%(m['package'],m['config']['designWidth'],m['deviceTypeList']))
 PY
 
-# 2) 工具链：缺失则自动安装
-if ! command -v hap >/dev/null 2>&1; then
-  echo "---- 未检测到 hap 工具链，安装 hap-toolkit-xiaomi ----"
-  npm install -g hap-toolkit-xiaomi
+# 2) 工具链：aiot-toolkit（全局）+ @aiot-toolkit/jsc（项目本地，生成 .jsc 字节码必需）
+if ! command -v aiot >/dev/null 2>&1; then
+  echo "---- 安装 aiot-toolkit ----"
+  npm install -g aiot-toolkit
 fi
-echo "hap-toolkit: $(hap --version)"
-
-# hap-toolkit-xiaomi@1.9.5 未把 @babel/plugin-proposal-optional-chaining 声明为依赖，
-# 但打包器（babel-loader）会加载它 → 缺失时报 "Cannot find package ... optional-chaining"。
-# 干净环境（如 CI runner）必然缺，故此处幂等补齐。
-HAP_PKG="$(npm root -g)/hap-toolkit-xiaomi"
-if [ ! -d "$HAP_PKG/node_modules/@babel/plugin-proposal-optional-chaining" ]; then
-  echo "---- 补齐工具链缺失的 @babel/plugin-proposal-optional-chaining ----"
-  ( cd "$HAP_PKG" && npm install @babel/plugin-proposal-optional-chaining --no-save )
+echo "aiot-toolkit: $(aiot --version)"
+if [ ! -d node_modules/@aiot-toolkit/jsc ]; then
+  echo "---- 安装 @aiot-toolkit/jsc（项目本地）----"
+  npm install @aiot-toolkit/jsc --no-save
 fi
 
-# 3) 签名预检：手环快应用需与手机 App 同源签名，否则 system.interconnect 拒绝通信
+# 3) 签名判断：同源证书存在则出正式签名包
 SIGN_OK=0
 if [ -f sign/certificate.pem ] && [ -f sign/private.pem ]; then
   SIGN_OK=1
@@ -55,34 +56,28 @@ else
   echo "   生成：sh scripts/export_cert.sh" >&2
 fi
 
-# 4) 构建（Node 17+ 的 OpenSSL 3 与 webpack 旧哈希不兼容，需 legacy provider）
+# 4) 构建（Node 17+ 的 OpenSSL 3 兼容）
 export NODE_OPTIONS=--openssl-legacy-provider
-echo "---- hap build ----"
-hap build
-
-# 5) 重签（同源正式签名）：hap build 默认使用工具链内置 debug 签名，须用手机 App 同源证书重签
+rm -rf dist build
 if [ "$SIGN_OK" = "1" ]; then
-  echo "---- 用同源正式签名重签 .rpk ----"
-  export HAP_PKG_DIR="$(npm root -g)/hap-toolkit-xiaomi/node_modules/@hap-toolkit-xiaomi/packager/lib"
-  node -e '
-    const fs=require("fs"),path=require("path");
-    const {signForRpk}=require(path.join(process.env.HAP_PKG_DIR,"index.js"));
-    const root=process.cwd();
-    const cert=fs.readFileSync(path.join(root,"sign/certificate.pem"),"utf8");
-    const priv=fs.readFileSync(path.join(root,"sign/private.pem"),"utf8");
-    const m=JSON.parse(fs.readFileSync(path.join(root,"src/manifest.json"),"utf8"));
-    const src=path.join(root,"dist",m.package+".debug."+m.versionName+".rpk");
-    if(!fs.existsSync(src)){console.error("未找到待重签 rpk:",src);process.exit(1);}
-    signForRpk(fs.readFileSync(src),priv,cert).then(out=>{
-      const dest=path.join(root,"dist",m.package+"."+m.versionName+".rpk");
-      fs.writeFileSync(dest,out);
-      fs.unlinkSync(src); // 删除 debug 中间产物，dist 仅保留同源正式签名包
-      console.log("RESIGNED ->",dest,out.length,"bytes");
-    }).catch(e=>{console.error("重签失败:",e.message);process.exit(1);});
-  '
+  echo "---- aiot release --enable-jsc（同源正式签名 + .jsc 字节码）----"
+  aiot release --enable-jsc
 else
-  echo "!! 跳过重签：未提供同源签名，产物为 debug 签名，真机通信会被拒" >&2
+  echo "---- aiot build --enable-jsc（调试签名 + .jsc 字节码）----"
+  aiot build --enable-jsc
+fi
+
+# 5) 统一产物名：com.lightningteam.suchmusic.<version>.rpk
+VER="$(python3 -c "import json;print(json.load(open('src/manifest.json'))['versionName'])")"
+SRC="$(ls dist/*.rpk 2>/dev/null | head -1 || true)"
+if [ -n "$SRC" ]; then
+  TARGET="dist/com.lightningteam.suchmusic.${VER}.rpk"
+  if [ "$SRC" != "$TARGET" ]; then cp -f "$SRC" "$TARGET"; fi
+  echo "---- 产物：$TARGET"
+else
+  echo "!! 未产出 .rpk，请检查上方日志" >&2
+  exit 1
 fi
 
 echo "== 产物 =="
-ls -la dist/*.rpk 2>/dev/null || echo "（未产出 .rpk，请检查上方日志）"
+ls -la dist/*.rpk
