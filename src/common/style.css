@@ -1,12 +1,12 @@
 /*
- * style.css —— 手环端设计令牌（小米手环 10：物理 212×520，designWidth=106 → 1 单位 = 2 物理 px）
+ * style.css —— 手环端设计令牌 v3（小米手环 10：212×520 物理，designWidth=106）
  *
- * 布局原则（针对 Vela 运行时实测修正）：
- *   1. 所有容器给**固定宽高**，不依赖 flex:1 / grow —— 该运行时里 flex:1 不会撑开，
- *      文本容器会被压到 1 字符宽，表现为「文字竖排」。
- *   2. 单屏 92 宽（左右各留 7），纵向排布约 230 高，避开上下圆角盲区。
- *   3. 文案一律短词（2–3 字），按钮内边距 ≥ 6，避免换行。
- *   4. 点击区必须是 div；<text> 只负责文字（运行时不响应 text 的 onclick）。
+ * 本版按用户反馈调整：**按钮更大、圆角更多、信息密度更低**。
+ * 布局约束（Vela 运行时实测）：
+ *   1. 不用 flex:1 / grow —— 该运行时不撑开，文本容器会塌成 1 字符宽（竖排）。
+ *   2. 一律固定宽高；Vela 无 box-sizing，width 不含 padding，故内边距用子元素 margin。
+ *   3. 内容区 92 宽（左右各 7），纵向节奏见各区块 margin。
+ *   4. 点击区必须是 div；<text> 只承载文字。
  */
 
 .page {
@@ -15,130 +15,178 @@
   color: #333333;
   padding-left: 7px;
   padding-right: 7px;
-  padding-top: 26px;
-  padding-bottom: 12px;
+  padding-top: 14px;
+  padding-bottom: 4px;
 }
 
 /* ---------------- 顶部状态行 ---------------- */
 .status-row {
   width: 92px;
-  height: 16px;
+  height: 14px;
   flex-direction: row;
   align-items: center;
 }
 .brand-text {
-  width: 58px;
-  font-size: 11px;
+  width: 62px;
+  font-size: 10px;
   font-weight: 600;
   color: #333333;
   text-overflow: ellipsis;
 }
 .dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 4px;
   margin-left: 2px;
-  margin-right: 3px;
+  margin-right: 4px;
 }
 .dot-on { background-color: #2F84FE; }
 .dot-off { background-color: #C8C8C8; }
 .link-text {
-  width: 24px;
+  width: 22px;
   font-size: 8px;
   color: #838383;
   text-align: right;
 }
 
-/* ---------------- 卡片 ----------------
-   注意：Vela 无 box-sizing，width 不包含 padding —— 卡片宽度必须=内容宽度，
-   内边距改用子元素 margin 实现（92 = 5 + 32 + 6 + 44 + 5） */
+/* ---------------- 卡片（大圆角） ---------------- */
 .card {
   width: 92px;
-  height: 52px;
+  height: 44px;
   background-color: #FFFFFF;
-  border-radius: 10px;
+  border-radius: 14px;
   flex-direction: row;
   align-items: center;
 }
-.song-card { margin-top: 12px; }
+.song-card { margin-top: 8px; }
 .cover {
-  width: 36px;
-  height: 36px;
-  margin-left: 5px;
-  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  margin-left: 6px;
+  border-radius: 10px;
   background-color: #2F84FE;
   color: #FFFFFF;
   font-size: 12px;
-  line-height: 36px;
+  line-height: 32px;
   text-align: center;
 }
 .song-meta {
-  width: 44px;
+  width: 46px;
   margin-left: 6px;
   flex-direction: column;
 }
 .title-h2 {
-  width: 44px;
-  font-size: 11px;
-  line-height: 14px;
+  width: 46px;
+  font-size: 10px;
+  line-height: 12px;
   color: #333333;
   text-overflow: ellipsis;
 }
 .caption {
-  width: 44px;
-  margin-top: 2px;
-  font-size: 8px;
-  line-height: 11px;
+  width: 46px;
+  margin-top: 1px;
+  font-size: 7px;
+  line-height: 9px;
   color: #838383;
   text-overflow: ellipsis;
 }
 
-/* ---------------- 进度条（div 宽度实现，无 Canvas） ---------------- */
+/* ---------------- 进度条 ---------------- */
 .progress-wrap {
   width: 92px;
-  margin-top: 12px;
+  margin-top: 8px;
   flex-direction: column;
 }
 .progress-track {
   width: 92px;
-  height: 2px;
-  border-radius: 1px;
+  height: 3px;
+  border-radius: 2px;
   background-color: #E4E6EA;
 }
 .progress-fill {
-  height: 2px;
-  border-radius: 1px;
+  height: 3px;
+  border-radius: 2px;
   background-color: #2F84FE;
 }
 .time-row {
   width: 92px;
-  margin-top: 3px;
+  margin-top: 2px;
+  height: 9px;
   flex-direction: row;
 }
 .time-text {
   width: 46px;
+  height: 9px;
   font-size: 7px;
   color: #999999;
 }
 .time-right { text-align: right; }
 
-/* ---------------- 主按钮（固定 28 宽，三枚 + 间距 = 92） ---------------- */
-.btn-row {
+/* ---------------- 大按钮：中央播放 44 圆形；两侧 38 圆形 ---------------- */
+.play-row {
   width: 92px;
-  margin-top: 12px;
+  margin-top: 10px;
   flex-direction: row;
+  justify-content: center;
+  align-items: center;
 }
-.tbtn {
-  width: 28px;
-  height: 30px;
-  border-radius: 9px;
+.play-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  background-color: #2F84FE;
+  justify-content: center;
+  align-items: center;
+}
+.play-btn-off { background-color: #C8C8C8; }
+.play-text {
+  font-size: 11px;
+  color: #FFFFFF;
+  text-align: center;
+}
+.side-row {
+  width: 92px;
+  margin-top: 6px;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+.side-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
   background-color: #FFFFFF;
   border: 1px solid #E4E6EA;
   justify-content: center;
   align-items: center;
-  margin-right: 4px;
+  margin-left: 6px;
+  margin-right: 6px;
 }
-.tbtn-last { margin-right: 0; }
+.side-text {
+  font-size: 9px;
+  color: #333333;
+  text-align: center;
+}
+
+/* 子页：三枚等宽圆形按钮（30×30） */
+.btn-row {
+  width: 92px;
+  margin-top: 10px;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+.tbtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 15px;
+  background-color: #FFFFFF;
+  border: 1px solid #E4E6EA;
+  justify-content: center;
+  align-items: center;
+  margin-left: 2px;
+  margin-right: 2px;
+}
 .tbtn-text {
   font-size: 9px;
   color: #333333;
@@ -158,35 +206,41 @@
   border-color: #C8C8C8;
 }
 
-/* ---------------- 导航行（随内容排布，不贴屏幕底边） ---------------- */
+/* ---------------- 导航行（三个圆形块） ---------------- */
 .nav-row {
   width: 92px;
-  margin-top: 14px;
+  margin-top: 8px;
   flex-direction: row;
+  justify-content: center;
 }
 .nav-cell {
-  width: 30px;
-  height: 26px;
+  width: 28px;
+  height: 24px;
+  margin-left: 1px;
+  margin-right: 1px;
+  border-radius: 12px;
+  background-color: #FFFFFF;
+  border: 1px solid #E4E6EA;
   justify-content: center;
   align-items: center;
-  margin-right: 1px;
 }
 .nav-label {
-  font-size: 9px;
+  font-size: 8px;
   color: #838383;
+  text-align: center;
 }
 
-/* ---------------- 子页头部（返回 + 标题，均在安全区内） ---------------- */
+/* ---------------- 子页头部 ---------------- */
 .head-row {
   width: 92px;
-  height: 22px;
+  height: 24px;
   flex-direction: row;
   align-items: center;
 }
 .back-chip {
-  width: 30px;
-  height: 18px;
-  border-radius: 6px;
+  width: 34px;
+  height: 22px;
+  border-radius: 11px;
   background-color: #FFFFFF;
   border: 1px solid #E4E6EA;
   justify-content: center;
@@ -198,7 +252,7 @@
   text-align: center;
 }
 .head-title {
-  width: 54px;
+  width: 50px;
   margin-left: 6px;
   font-size: 12px;
   font-weight: 600;
@@ -219,7 +273,7 @@
 }
 .list-item {
   width: 92px;
-  height: 32px;
+  height: 34px;
   flex-direction: row;
   align-items: center;
   border-bottom: 1px solid #F0F0F0;
@@ -230,17 +284,17 @@
   color: #999999;
 }
 .list-main {
-  width: 64px;
+  width: 62px;
   flex-direction: column;
 }
 .list-title {
-  width: 64px;
+  width: 62px;
   font-size: 10px;
   color: #333333;
   text-overflow: ellipsis;
 }
 .list-sub {
-  width: 64px;
+  width: 62px;
   font-size: 8px;
   color: #838383;
   text-overflow: ellipsis;
@@ -255,11 +309,11 @@
 }
 .current-bar-off { background-color: transparent; }
 
-/* ---------------- chip / 词条（点击区为 div） ---------------- */
+/* ---------------- chip / 词条 ---------------- */
 .chip {
   width: 44px;
-  height: 22px;
-  border-radius: 7px;
+  height: 24px;
+  border-radius: 12px;
   background-color: #FFFFFF;
   border: 1px solid #E4E6EA;
   justify-content: center;
@@ -279,59 +333,18 @@
   background-color: #EAF2FF;
 }
 .chip-accent .chip-text { color: #2F84FE; }
-
-/* 三枚窄 chip（控制页模式切换：3×30 + 2×1 = 92） */
-.chip-row {
-  width: 92px;
-  margin-top: 8px;
-  flex-direction: row;
-}
-/* 可换行词条区（搜索页热搜） */
 .chip-wrap {
   width: 92px;
   margin-top: 4px;
   flex-direction: row;
   flex-wrap: wrap;
 }
-.chip-s {
-  width: 30px;
-  height: 22px;
-  border-radius: 7px;
-  background-color: #FFFFFF;
-  border: 1px solid #E4E6EA;
-  justify-content: center;
-  align-items: center;
-  margin-right: 1px;
-}
-.chip-s-last { margin-right: 0; }
-.chip-text-s {
-  width: 28px;
-  font-size: 8px;
-  color: #333333;
-  text-align: center;
-}
-
-/* 扁平入口条 */
-.card-flat {
-  width: 92px;
-  height: 26px;
-  background-color: #FFFFFF;
-  border-radius: 8px;
-  justify-content: center;
-  align-items: center;
-}
-.card-flat-text {
-  width: 84px;
-  font-size: 8px;
-  color: #333333;
-  text-align: center;
-  text-overflow: ellipsis;
-}
 
 /* 历史记录「删除」小按钮 */
 .del-chip {
   width: 22px;
   height: 22px;
+  border-radius: 11px;
   justify-content: center;
   align-items: center;
 }
@@ -343,18 +356,18 @@
 
 /* 模式选择行的圆点 */
 .pick {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 4px;
   border: 1px solid #C8C8C8;
-  margin-right: 5px;
+  margin-right: 6px;
 }
 .pick-on {
   background-color: #2F84FE;
   border-color: #2F84FE;
 }
 .body {
-  width: 45px;
+  width: 44px;
   font-size: 10px;
   color: #333333;
   text-overflow: ellipsis;
@@ -369,7 +382,25 @@
   text-overflow: ellipsis;
 }
 
-/* ---------------- 通用（尽量少用） ---------------- */
+/* 扁平入口条（大圆角） */
+.card-flat {
+  width: 92px;
+  height: 28px;
+  margin-top: 10px;
+  background-color: #FFFFFF;
+  border-radius: 14px;
+  justify-content: center;
+  align-items: center;
+}
+.card-flat-text {
+  width: 84px;
+  font-size: 8px;
+  color: #333333;
+  text-align: center;
+  text-overflow: ellipsis;
+}
+
+/* ---------------- 通用 ---------------- */
 .row { flex-direction: row; align-items: center; }
 .col { flex-direction: column; }
 .mt4 { margin-top: 4px; }

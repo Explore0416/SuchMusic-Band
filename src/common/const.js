@@ -24,8 +24,8 @@ var ROUTES = {
 /** 品牌与文案 */
 var TEXT = {
   brand: 'SuchMusic',
-  connected: '已连接',
-  disconnected: '未连接',
+  connected: '已连',
+  disconnected: '未连',
   connecting: '连接中',
   appMissing: '手机未装App',
   liveTitle: '正在播放',
