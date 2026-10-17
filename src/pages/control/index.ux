@@ -6,48 +6,51 @@
       <text class="head-title">正在播放</text>
     </div>
 
-    <!-- 曲目 -->
-    <div class="col" style="margin-top: 6px;">
-      <text class="title-h2 ellipsis center">{{ songName }}</text>
-      <text class="caption ellipsis center mt4">{{ artistAlbum }}</text>
+    <!-- 曲目卡 -->
+    <div class="card song-card">
+      <text class="cover">曲</text>
+      <div class="song-meta">
+        <text class="title-h2">{{ songName }}</text>
+        <text class="caption">{{ artistAlbum }}</text>
+      </div>
     </div>
 
     <!-- 可点进度条 → playback.seek（点击区为 div） -->
-    <div class="col mt8" onclick="onSeek">
+    <div class="progress-wrap" onclick="onSeek">
       <div class="progress-track">
         <div class="progress-fill" style="width: {{ progressWidth }};"></div>
       </div>
-      <div class="row" style="justify-content: space-between; margin-top: 4px;">
-        <text class="meta">{{ positionText }}</text>
-        <text class="meta">{{ durationText }}</text>
+      <div class="time-row">
+        <text class="time-text">{{ positionText }}</text>
+        <text class="time-text time-right">{{ durationText }}</text>
       </div>
     </div>
 
-    <!-- 三个大键（点击区均为 div，内层 text 只负责文字） -->
-    <div class="row mt8" style="justify-content: space-around;">
-      <div class="tbtn" onclick="prev"><text class="tbtn-text">上一首</text></div>
+    <!-- 三个大键（点击区均为 div） -->
+    <div class="btn-row">
+      <div class="tbtn" onclick="prev"><text class="tbtn-text">上一</text></div>
       <div class="tbtn tbtn-primary {{ playing ? '' : 'tbtn-off' }}" onclick="toggle">
         <text class="tbtn-text-inv">{{ playing ? '暂停' : '播放' }}</text>
       </div>
-      <div class="tbtn" onclick="next"><text class="tbtn-text">下一首</text></div>
+      <div class="tbtn tbtn-last" onclick="next"><text class="tbtn-text">下一</text></div>
     </div>
 
     <!-- 模式快捷切换（点击区均为 div） -->
-    <div class="row mt8" style="justify-content: center;">
-      <div class="chip {{ mode === 'single' ? 'chip-accent' : '' }}" onclick="setSingle">
-        <text class="chip-text">单曲循环</text>
+    <div class="chip-row">
+      <div class="chip-s {{ mode === 'single' ? 'chip-accent' : '' }}" onclick="setSingle">
+        <text class="chip-text-s">单曲</text>
       </div>
-      <div class="chip {{ mode === 'loop' ? 'chip-accent' : '' }}" onclick="setLoop">
-        <text class="chip-text">顺序</text>
+      <div class="chip-s {{ mode === 'loop' ? 'chip-accent' : '' }}" onclick="setLoop">
+        <text class="chip-text-s">顺序</text>
       </div>
-      <div class="chip {{ mode === 'shuffle' ? 'chip-accent' : '' }}" onclick="setShuffle">
-        <text class="chip-text">乱序</text>
+      <div class="chip-s chip-s-last {{ mode === 'shuffle' ? 'chip-accent' : '' }}" onclick="setShuffle">
+        <text class="chip-text-s">乱序</text>
       </div>
     </div>
 
     <!-- 播放列表入口 -->
-    <div class="card-flat list-item song-card" style="justify-content: center;" onclick="goMode">
-      <text class="body">播放列表 {{ queueCount }} 首 · 当前 {{ currentIndexText }}</text>
+    <div class="card-flat" style="margin-top: 9px;" onclick="goMode">
+      <text class="card-flat-text">列表 {{ queueCount }} 首 · 当前 {{ currentIndexText }}</text>
     </div>
   </div>
 </template>

@@ -1,37 +1,32 @@
 <template>
   <div class="page">
-    <!-- 头部行：返回块（div 点击区） + 标题 -->
+    <!-- 头部行 -->
     <div class="head-row">
       <div class="back-chip" onclick="back"><text class="back-text">返回</text></div>
       <text class="head-title">播放模式</text>
     </div>
 
     <!-- 三选一：顺序 / 单曲 / 乱序 -->
-    <div class="card col" style="padding: 0;">
+    <div class="col" style="margin-top: 8px;">
       <div class="list-item" for="{{ modes }}" onclick="choose($item.mode)">
         <div class="pick {{ $item.selected ? 'pick-on' : '' }}"></div>
-        <text class="body grow">{{ $item.label }}</text>
-        <text class="meta accent">{{ $item.selected ? '使用中' : '' }}</text>
+        <text class="body">{{ $item.label }}</text>
+        <text class="meta">{{ $item.selected ? '使用中' : '' }}</text>
       </div>
     </div>
 
-    <!-- 播放列表（协议仅提供 count/currentIndex，见 README 偏差 E2） -->
-    <div class="col mt8">
-      <text class="meta">播放列表（{{ queueCount }}）</text>
-    </div>
+    <!-- 播放列表（协议仅提供 count/currentIndex） -->
+    <text class="meta" style="margin-top: 8px;">播放列表（{{ queueCount }}）</text>
     <list class="list">
       <list-item type="queue" class="list-item {{ $item.current ? 'list-item-current' : '' }}"
                  for="{{ queueList }}" onclick="play($item.index)">
-        <div class="{{ $item.current ? 'current-bar' : '' }}"></div>
+        <div class="{{ $item.current ? 'current-bar' : 'current-bar-off' }}"></div>
         <text class="list-index">{{ $item.index + 1 }}</text>
         <div class="list-main">
-          <text class="list-title ellipsis">{{ $item.label }}</text>
+          <text class="list-title">{{ $item.label }}</text>
         </div>
       </list-item>
     </list>
-    <div class="grow" if="{{ queueCount === 0 }}">
-      <text class="meta center">队列为空</text>
-    </div>
   </div>
 </template>
 

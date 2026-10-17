@@ -1,32 +1,29 @@
 <template>
   <div class="page">
-    <!-- 头部行：返回块（div 点击区） + 标题 -->
+    <!-- 头部行 -->
     <div class="head-row">
       <div class="back-chip" onclick="back"><text class="back-text">返回</text></div>
       <text class="head-title">歌词</text>
-      <div class="grow"></div>
-      <text class="meta ellipsis">{{ songLabel }}</text>
+      <text class="head-side">{{ positionText }}</text>
     </div>
 
     <!-- 歌词窗口（≤12 行，单行不换行） -->
-    <list class="list">
+    <list class="list" style="margin-top: 6px;">
       <list-item type="line" class="list-item" for="{{ lines }}">
         <div class="current-bar {{ $item.current ? '' : 'current-bar-off' }}"></div>
-        <text class="{{ $item.current ? 'body accent' : 'caption' }} grow ellipsis">{{ $item.text }}</text>
+        <text class="{{ $item.current ? 'list-title accent' : 'list-sub' }}">{{ $item.text }}</text>
       </list-item>
     </list>
-
-    <div class="grow" if="{{ lines.length === 0 }}">
-      <text class="meta center">{{ emptyText }}</text>
-    </div>
+    <div class="meta" if="{{ lines.length === 0 }}" style="margin-top: 6px;">{{ emptyText }}</div>
 
     <!-- 底部进度 -->
-    <div class="col">
+    <div class="progress-wrap">
       <div class="progress-track">
         <div class="progress-fill" style="width: {{ progressWidth }};"></div>
       </div>
-      <div class="row" style="justify-content: space-between; margin-top: 4px;">
-        <text class="meta">{{ positionText }} / {{ durationText }}</text>
+      <div class="time-row">
+        <text class="time-text">{{ positionText }}</text>
+        <text class="time-text time-right">{{ durationText }}</text>
       </div>
     </div>
   </div>
