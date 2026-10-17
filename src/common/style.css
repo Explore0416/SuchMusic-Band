@@ -16,7 +16,7 @@
   background-color: #000000;
   padding-left: 7px;
   padding-right: 7px;
-  padding-top: 28px;
+  padding-top: 58px;
   padding-bottom: 12px;
 }
 
@@ -127,8 +127,9 @@
   margin-top: 10px;
 }
 .progress-track {
-  width: 100%;
+  width: 92px;
   height: 3px;
+  margin-top: 10px;
   border-radius: 2px;
   background-color: #2C2C2E;
 }
@@ -138,13 +139,13 @@
   background-color: #2F84FE;
 }
 .time-row {
-  width: 100%;
+  width: 92px;
   height: 10px;
   margin-top: 4px;
   flex-direction: row;
 }
 .time-text {
-  width: 50%;
+  width: 46px;
   height: 10px;
   font-size: 8px;
   line-height: 10px;
@@ -156,7 +157,7 @@
 .nav-row {
   width: 92px;
   height: 32px;
-  margin-top: 22px;
+  margin-top: 28px;
   flex-direction: row;
 }
 .nav-cell {

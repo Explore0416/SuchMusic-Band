@@ -30,14 +30,12 @@
     </div>
 
     <!-- 进度 -->
-    <div class="progress-wrap">
-      <div class="progress-track">
-        <div class="progress-fill" style="width: {{ progressWidth }};"></div>
-      </div>
-      <div class="time-row">
-        <text class="time-text">{{ positionText }}</text>
-        <text class="time-text time-right">{{ durationText }}</text>
-      </div>
+    <div class="progress-track">
+      <div class="progress-fill" style="width: {{ progressWidth }};"></div>
+    </div>
+    <div class="time-row">
+      <text class="time-text">{{ positionText }}</text>
+      <text class="time-text time-right">{{ durationText }}</text>
     </div>
 
     <!-- 底部导航 -->
