@@ -1,48 +1,47 @@
 <template>
   <div class="page">
-    <!-- 状态行：品牌 + 连接状态（紧凑，不占整行顶栏） -->
-    <div class="row">
-      <text class="topbar-title">{{ brand }}</text>
-      <div class="grow"></div>
+    <!-- 状态行：品牌 + 连接状态（固定宽度，避免挤压换行） -->
+    <div class="status-row">
+      <text class="brand-text">{{ brand }}</text>
       <div class="dot {{ connected ? 'dot-on' : 'dot-off' }}"></div>
       <text class="link-text">{{ linkText }}</text>
     </div>
 
     <!-- 启动异常提示（正常为空，不占位） -->
-    <div class="row" if="{{ initError }}">
+    <div class="status-row" if="{{ initError }}">
       <text class="caption" style="color: #E94560;">{{ initError }}</text>
     </div>
 
-    <!-- 歌曲信息卡（点击进入控制页） -->
-    <div class="card row song-card" onclick="goControl">
+    <!-- 歌曲卡（点击进入控制页） -->
+    <div class="card song-card" onclick="goControl">
       <text class="cover">曲</text>
-      <div class="col grow" style="margin-left: 8px;">
-        <text class="title-h2 ellipsis">{{ songName }}</text>
-        <text class="caption ellipsis mt4">{{ artistAlbum }}</text>
+      <div class="song-meta">
+        <text class="title-h2">{{ songName }}</text>
+        <text class="caption">{{ artistAlbum }}</text>
       </div>
     </div>
 
-    <!-- 进度条（div 宽度实现，无 Canvas） -->
-    <div class="col mt8">
+    <!-- 进度条 -->
+    <div class="progress-wrap">
       <div class="progress-track">
         <div class="progress-fill" style="width: {{ progressWidth }};"></div>
       </div>
-      <div class="row" style="justify-content: space-between; margin-top: 4px;">
-        <text class="meta">{{ positionText }}</text>
-        <text class="meta">{{ durationText }}</text>
+      <div class="time-row">
+        <text class="time-text">{{ positionText }}</text>
+        <text class="time-text time-right">{{ durationText }}</text>
       </div>
     </div>
 
-    <!-- 主操作行：点击区均为 div（Vela 运行时 <text> 不响应 onclick） -->
-    <div class="row mt8" style="justify-content: space-between;">
-      <div class="tbtn" onclick="prev"><text class="tbtn-text">上一首</text></div>
+    <!-- 主操作行：点击区均为 div；文案限 2 字，避免换行 -->
+    <div class="btn-row">
+      <div class="tbtn" onclick="prev"><text class="tbtn-text">上一</text></div>
       <div class="tbtn tbtn-primary {{ playing ? '' : 'tbtn-off' }}" onclick="toggle">
         <text class="tbtn-text-inv">{{ playing ? '暂停' : '播放' }}</text>
       </div>
-      <div class="tbtn" onclick="next"><text class="tbtn-text">下一首</text></div>
+      <div class="tbtn tbtn-last" onclick="next"><text class="tbtn-text">下一</text></div>
     </div>
 
-    <!-- 导航行（随内容排布，不钉在屏幕底边） -->
+    <!-- 导航行 -->
     <div class="nav-row">
       <div class="nav-cell" onclick="goSearch"><text class="nav-label">搜索</text></div>
       <div class="nav-cell" onclick="goMode"><text class="nav-label">模式</text></div>
