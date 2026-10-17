@@ -177,9 +177,11 @@ function createStore(opts) {
     enforceBudget();
     // 一律 JSON 序列化，保证与 load() 的 JSON.parse 读取对称
     var payload = JSON.stringify(cache[key]);
+    // 官方 storage.set 的参数名是 value（iot.mi.com/vela features/data/storage.html）；
+    // 写成 data 会被静默忽略 → 真机上持久化全部失效
     adapter.set({
       key: KEY_PREFIX + key,
-      data: payload,
+      value: payload,
       success: function () { if (cb) { cb({ ok: true }); } },
       fail: function () { if (cb) { cb({ ok: false, error: 'E_INTERNAL' }); } }
     });
@@ -210,10 +212,10 @@ function createStore(opts) {
       ALLOWED_KEYS.forEach(function (k) {
         adapter.get({
           key: KEY_PREFIX + k,
-          success: function (res) {
+          success: function (raw) {
             try {
-              var raw = res && res.data;
-              if (raw !== undefined && raw !== null) {
+              // 官方 storage.get 的 success 回调参数即 key 对应的存储内容（字符串）
+              if (raw !== undefined && raw !== null && raw !== '') {
                 var v = typeof raw === 'string' ? JSON.parse(raw) : raw;
                 // 载入即归一化，防止旧版/异常数据越界
                 cache[k] = normalizeValue(k, v);

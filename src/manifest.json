@@ -1,21 +1,30 @@
 {
   "package": "com.lightningteam.suchmusic",
   "name": "SuchMusic",
-  "versionName": "1.0.4",
-  "versionCode": 5,
+  "versionName": "1.0.6",
+  "versionCode": 6,
   "minPlatformVersion": 1000,
   "icon": "/common/logo.png",
   "deviceTypeList": [
     "watch"
   ],
   "features": [
-    { "name": "system.interconnect" },
-    { "name": "system.storage" },
-    { "name": "system.router" }
+    {
+      "name": "system.interconnect"
+    },
+    {
+      "name": "system.storage"
+    },
+    {
+      "name": "system.router"
+    },
+    {
+      "name": "system.prompt"
+    }
   ],
   "config": {
     "logLevel": "log",
-    "designWidth": 212
+    "designWidth": 106
   },
   "display": {
     "backgroundColor": "#F1F2F4"
@@ -23,11 +32,22 @@
   "router": {
     "entry": "pages/index",
     "pages": {
-      "pages/index": { "component": "index", "launchMode": "singleTask" },
-      "pages/control": { "component": "index" },
-      "pages/search": { "component": "index" },
-      "pages/mode": { "component": "index" },
-      "pages/lyric": { "component": "index" }
+      "pages/index": {
+        "component": "index",
+        "launchMode": "singleTask"
+      },
+      "pages/control": {
+        "component": "index"
+      },
+      "pages/search": {
+        "component": "index"
+      },
+      "pages/mode": {
+        "component": "index"
+      },
+      "pages/lyric": {
+        "component": "index"
+      }
     }
   }
 }

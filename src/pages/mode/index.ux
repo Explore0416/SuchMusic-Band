@@ -1,10 +1,9 @@
 <template>
   <div class="page">
-    <!-- 顶部栏 -->
-    <div class="topbar">
-      <text class="topbar-back" onclick="back">返回</text>
-      <text class="topbar-title">播放模式</text>
-      <text class="meta">{{ modeGlyph }}</text>
+    <!-- 头部行：返回块（div 点击区） + 标题 -->
+    <div class="head-row">
+      <div class="back-chip" onclick="back"><text class="back-text">返回</text></div>
+      <text class="head-title">播放模式</text>
     </div>
 
     <!-- 三选一：顺序 / 单曲 / 乱序 -->
@@ -44,6 +43,7 @@
 import router from '@system.router'
 import rpcMod from '../../utils/rpc.js'
 import state from '../../utils/state.js'
+import ui from '../../utils/ui.js'
 import modeUtil from '../../utils/mode.js'
 import store from '../../utils/store.js'
 
@@ -81,9 +81,11 @@ export default {
     this.queueList = list
   },
 
-  back() { router.back() },
+  back() { console.log('[ui] mode back'); router.back() },
 
   choose(mode) {
+    console.log('[ui] mode choose ' + mode)
+    if (ui.offlineToast(state)) { return }
     const rpc = rpcMod.getRpc()
     if (!rpc) { return }
     // 单选写入 playback.setMode；回包 player.mode 生效；本地持久化上次模式
@@ -93,6 +95,7 @@ export default {
   },
 
   play(index) {
+    if (ui.offlineToast(state)) { return }
     const rpc = rpcMod.getRpc()
     if (rpc) { rpc.queuePlay(index) }
   }

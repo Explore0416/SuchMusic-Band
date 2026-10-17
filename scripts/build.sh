@@ -25,7 +25,7 @@ python3 - <<'PY'
 import json,sys
 m=json.load(open('src/manifest.json'))
 assert m['package']=='com.lightningteam.suchmusic', 'package 必须为 com.lightningteam.suchmusic'
-assert m['config']['designWidth']==212, 'designWidth 必须为 212（小米手环 10 设计宽度）'
+assert m['config']['designWidth']==106, 'designWidth 必须为 106（CSS 数值按 1 单位=2 物理 px 设计）'
 assert 'watch' in m['deviceTypeList'], 'deviceTypeList 必须含 watch'
 feats=[f.get('name') for f in m.get('features',[])]
 for need in ['system.interconnect','system.storage','system.router']:

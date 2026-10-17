@@ -7,18 +7,14 @@
 var T = require('./tinytest.js');
 var S = require('../src/utils/store.js');
 
-/** 伪 storage 适配器 */
+/** 伪 storage 适配器（官方 Vela 语义：get 回调参数即存储值字符串；set/delete 参数名 value / 字符串 key） */
 function fakeAdapter() {
   var disk = {};
   return {
     disk: disk,
-    get: function (o) {
-      var out = {};
-      (o.key || []).forEach(function (k) { if (disk[k] !== undefined) { out[k] = disk[k]; } });
-      o.success({ data: out });
-    },
-    set: function (o) { disk[o.key] = o.data; o.success(); },
-    delete: function (o) { (o.key || []).forEach(function (k) { delete disk[k]; }); o.success(); }
+    get: function (o) { o.success(disk[o.key]); },
+    set: function (o) { disk[o.key] = o.value; o.success(); },
+    delete: function (o) { delete disk[o.key]; o.success(); }
   };
 }
 

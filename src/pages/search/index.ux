@@ -1,9 +1,10 @@
 <template>
   <div class="page">
-    <!-- 顶部栏 -->
-    <div class="topbar">
-      <text class="topbar-back" onclick="back">返回</text>
-      <text class="topbar-title">搜索</text>
+    <!-- 头部行：返回块（div 点击区） + 标题 -->
+    <div class="head-row">
+      <div class="back-chip" onclick="back"><text class="back-text">返回</text></div>
+      <text class="head-title">搜索</text>
+      <div class="grow"></div>
       <text class="meta">{{ connected ? '已连接' : '未连接' }}</text>
     </div>
 
@@ -23,7 +24,8 @@
       <div class="col" style="margin-top: 4px;">
         <div class="list-item" for="{{ history }}" onclick="searchHot($item)">
           <text class="body grow ellipsis">{{ $item }}</text>
-          <text class="meta accent" onclick="removeHistory($item)">删除</text>
+          <!-- 删除按钮：点击区必须为 div（<text> 不响应 onclick） -->
+          <div class="del-chip" onclick="removeHistory($item)"><text class="meta accent">删除</text></div>
         </div>
       </div>
     </div>
@@ -58,6 +60,7 @@
 import router from '@system.router'
 import rpcMod from '../../utils/rpc.js'
 import state from '../../utils/state.js'
+import ui from '../../utils/ui.js'
 import format from '../../utils/format.js'
 import store from '../../utils/store.js'
 import consts from '../../common/const.js'
@@ -114,7 +117,7 @@ export default {
     }))
   },
 
-  back() { router.back() },
+  back() { console.log('[ui] search back'); router.back() },
 
   // 点选热搜/历史 → 搜索
   searchHot(kw) {
@@ -127,6 +130,7 @@ export default {
   },
 
   doSearch(keyword) {
+    if (ui.offlineToast(state)) { return }
     const rpc = rpcMod.getRpc()
     if (!rpc || !keyword) { return }
     store.instance.pushHistory(keyword)
@@ -145,6 +149,7 @@ export default {
 
   // 选中结果 → 播放并回首页（协议缺口见 README 偏差 E1）
   playResult(index) {
+    if (ui.offlineToast(state)) { return }
     const rpc = rpcMod.getRpc()
     if (!rpc) { return }
     rpc.queuePlay(index, () => {
