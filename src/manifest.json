@@ -1,8 +1,8 @@
 {
   "package": "com.lightningteam.suchmusic",
   "name": "SuchMusic",
-  "versionName": "1.0.16",
-  "versionCode": 16,
+  "versionName": "1.0.17",
+  "versionCode": 17,
   "minPlatformVersion": 1000,
   "icon": "/common/logo.png",
   "deviceTypeList": [
