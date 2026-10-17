@@ -1,9 +1,10 @@
 <template>
   <div class="page">
-    <!-- 顶部栏：标题 + 当前曲目 -->
-    <div class="topbar">
-      <text class="topbar-back" onclick="back">返回</text>
-      <text class="topbar-title">歌词</text>
+    <!-- 头部行：返回块（div 点击区） + 标题 -->
+    <div class="head-row">
+      <div class="back-chip" onclick="back"><text class="back-text">返回</text></div>
+      <text class="head-title">歌词</text>
+      <div class="grow"></div>
       <text class="meta ellipsis">{{ songLabel }}</text>
     </div>
 
@@ -119,6 +120,6 @@ export default {
     this.lines = out
   },
 
-  back() { router.back() }
+  back() { console.log('[ui] lyric back'); router.back() }
 }
 </script>

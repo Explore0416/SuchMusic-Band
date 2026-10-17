@@ -27,6 +27,7 @@ var TEXT = {
   connected: '已连接',
   disconnected: '未连接',
   connecting: '连接中',
+  appMissing: '手机未装App',
   liveTitle: '正在播放',
   emptySong: '暂无歌曲',
   emptyArtist: '—',
@@ -47,6 +48,7 @@ var LINK_TEXT = {
   disconnected: TEXT.disconnected,
   connecting: TEXT.connecting,
   handshaking: TEXT.connecting,
+  appMissing: TEXT.appMissing,
   ready: TEXT.connected
 };
 

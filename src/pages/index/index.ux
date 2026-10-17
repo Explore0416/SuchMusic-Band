@@ -1,12 +1,11 @@
 <template>
   <div class="page">
-    <!-- 顶部栏：标题 + 连接状态 -->
-    <div class="topbar">
+    <!-- 状态行：品牌 + 连接状态（紧凑，不占整行顶栏） -->
+    <div class="row">
       <text class="topbar-title">{{ brand }}</text>
-      <div class="link-chip">
-        <div class="dot {{ connected ? 'dot-on' : 'dot-off' }}"></div>
-        <text class="link-text">{{ linkText }}</text>
-      </div>
+      <div class="grow"></div>
+      <div class="dot {{ connected ? 'dot-on' : 'dot-off' }}"></div>
+      <text class="link-text">{{ linkText }}</text>
     </div>
 
     <!-- 启动异常提示（正常为空，不占位） -->
@@ -15,7 +14,7 @@
     </div>
 
     <!-- 歌曲信息卡（点击进入控制页） -->
-    <div class="card row" onclick="goControl">
+    <div class="card row song-card" onclick="goControl">
       <text class="cover">曲</text>
       <div class="col grow" style="margin-left: 8px;">
         <text class="title-h2 ellipsis">{{ songName }}</text>
@@ -24,7 +23,7 @@
     </div>
 
     <!-- 进度条（div 宽度实现，无 Canvas） -->
-    <div class="col mt8" onclick="noop">
+    <div class="col mt8">
       <div class="progress-track">
         <div class="progress-fill" style="width: {{ progressWidth }};"></div>
       </div>
@@ -34,27 +33,20 @@
       </div>
     </div>
 
-    <!-- 主操作行：上一首 / 播放暂停 / 下一首
-         注：真机对 ⏮⏸▶⏭ 等符号字形渲染不可靠，改用中文文本按钮 -->
+    <!-- 主操作行：点击区均为 div（Vela 运行时 <text> 不响应 onclick） -->
     <div class="row mt8" style="justify-content: space-between;">
-      <text class="tbtn" onclick="prev">上一首</text>
-      <text class="tbtn tbtn-primary {{ playing ? '' : 'tbtn-off' }}" onclick="toggle">{{ playing ? '暂停' : '播放' }}</text>
-      <text class="tbtn" onclick="next">下一首</text>
+      <div class="tbtn" onclick="prev"><text class="tbtn-text">上一首</text></div>
+      <div class="tbtn tbtn-primary {{ playing ? '' : 'tbtn-off' }}" onclick="toggle">
+        <text class="tbtn-text-inv">{{ playing ? '暂停' : '播放' }}</text>
+      </div>
+      <div class="tbtn" onclick="next"><text class="tbtn-text">下一首</text></div>
     </div>
 
-    <div class="grow"></div>
-
-    <!-- 底部三宫格入口 -->
-    <div class="bottom-nav">
-      <div class="nav-cell" onclick="goSearch">
-        <text class="nav-label">搜索</text>
-      </div>
-      <div class="nav-cell" onclick="goMode">
-        <text class="nav-label">播放模式</text>
-      </div>
-      <div class="nav-cell" onclick="goLyric">
-        <text class="nav-label">歌词</text>
-      </div>
+    <!-- 导航行（随内容排布，不钉在屏幕底边） -->
+    <div class="nav-row">
+      <div class="nav-cell" onclick="goSearch"><text class="nav-label">搜索</text></div>
+      <div class="nav-cell" onclick="goMode"><text class="nav-label">模式</text></div>
+      <div class="nav-cell" onclick="goLyric"><text class="nav-label">歌词</text></div>
     </div>
   </div>
 </template>
@@ -67,6 +59,7 @@
 import router from '@system.router'
 import rpcMod from '../../utils/rpc.js'
 import state from '../../utils/state.js'
+import ui from '../../utils/ui.js'
 import format from '../../utils/format.js'
 import consts from '../../common/const.js'
 
@@ -119,23 +112,28 @@ export default {
     this.progressWidth = format.widthPercent(format.progressRatio(s.positionMs, s.durationMs))
   },
 
-  goControl() { router.push({ uri: consts.ROUTES.CONTROL }) },
-  goSearch() { router.push({ uri: consts.ROUTES.SEARCH }) },
-  goMode() { router.push({ uri: consts.ROUTES.MODE }) },
-  goLyric() { router.push({ uri: consts.ROUTES.LYRIC }) },
-  noop() {},
+  goControl() { console.log('[ui] tap goControl'); router.push({ uri: consts.ROUTES.CONTROL }) },
+  goSearch() { console.log('[ui] tap goSearch'); router.push({ uri: consts.ROUTES.SEARCH }) },
+  goMode() { console.log('[ui] tap goMode'); router.push({ uri: consts.ROUTES.MODE }) },
+  goLyric() { console.log('[ui] tap goLyric'); router.push({ uri: consts.ROUTES.LYRIC }) },
 
   toggle() {
+    console.log('[ui] tap toggle, playing=' + this.playing)
+    if (ui.offlineToast(state)) { return }
     const rpc = rpcMod.getRpc()
     if (!rpc) { return }
     // 显式 play/pause（优先于 playback.toggle，§3.5）
     if (this.playing) { rpc.pause() } else { rpc.play() }
   },
   prev() {
+    console.log('[ui] tap prev')
+    if (ui.offlineToast(state)) { return }
     const rpc = rpcMod.getRpc()
     if (rpc) { rpc.prev() }
   },
   next() {
+    console.log('[ui] tap next')
+    if (ui.offlineToast(state)) { return }
     const rpc = rpcMod.getRpc()
     if (rpc) { rpc.next() }
   }

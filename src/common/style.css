@@ -3,38 +3,23 @@
  * 物理 212×520，designWidth=106 ⇒ 1 逻辑单位 = 2 物理 px；此处数值即逻辑值。
  * 视觉基因与手机版一致：主色 #2F84FE / 页底 #F1F2F4 / 白卡片 / 圆角 / 副标题灰 #838383。
  * 无阴影（性能）、无 Canvas（进度条用 div 宽度实现）。
+ * 布局为手环原生紧凑式（非手机版移植）：单屏、无滚动、避开上下圆角盲区。
  */
 
 /* 页面根：不显式设 width/height（交给框架默认满屏，与可跑的 songbird 一致）；
-   显式 height:100% 在部分 Vela 版本下无法解析，会让根节点塌成 0 高、整页不可见 */
+   显式 height:100% 在部分 Vela 版本下无法解析，会让根节点塌成 0 高、整页不可见。
+   上下 padding 为圆角盲区安全边距（24/28 物理 px），内容整体居中不贴边 */
 .page {
   flex-direction: column;
   background-color: #F1F2F4;
   color: #333333;
   padding-left: 8px;
   padding-right: 8px;
+  padding-top: 12px;
+  padding-bottom: 14px;
 }
 
 /* ---------------- 顶部栏 ---------------- */
-.topbar {
-  height: 32px;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-}
-.topbar-title {
-  font-size: 17px;
-  font-weight: 600;
-  color: #333333;
-}
-.topbar-back {
-  width: 36px;
-  height: 22px;
-  font-size: 13px;
-  line-height: 22px;
-  color: #333333;
-  text-align: left;
-}
 .link-chip {
   flex-direction: row;
   align-items: center;
@@ -58,6 +43,9 @@
   border-radius: 16px;
   padding: 8px;
 }
+.song-card {
+  margin-top: 10px;
+}
 .card-flat {
   background-color: #FFFFFF;
   border-radius: 8px;
@@ -67,6 +55,12 @@
 .title-h2 {
   font-size: 15px;
   font-weight: 500;
+  color: #333333;
+}
+/* 首页品牌字 */
+.topbar-title {
+  font-size: 17px;
+  font-weight: 600;
   color: #333333;
 }
 .body {
@@ -138,28 +132,35 @@
   background-color: #CCCCCC;
 }
 
-/* 文本按钮（真机对符号字形渲染不可靠，统一改用中文文本） */
+/* 文本按钮（真机对符号字形渲染不可靠，统一改用中文文本）。
+   点击区必须是 div（Vela 运行时 <text> 不响应 onclick），内层 text 只负责文字 */
 .tbtn {
-  height: 30px;
-  line-height: 30px;
-  border-radius: 10px;
+  height: 32px;
+  border-radius: 12px;
   background-color: #FFFFFF;
   border: 1px solid #EEEEEE;
-  color: #333333;
-  font-size: 11px;
-  text-align: center;
+  justify-content: center;
+  align-items: center;
   padding-left: 10px;
   padding-right: 10px;
+}
+.tbtn-text {
+  font-size: 13px;
+  color: #333333;
+  text-align: center;
+}
+.tbtn-text-inv {
+  font-size: 13px;
+  color: #FFFFFF;
+  text-align: center;
 }
 .tbtn-primary {
   background-color: #2F84FE;
   border-color: #2F84FE;
-  color: #FFFFFF;
 }
 .tbtn-off {
   background-color: #CCCCCC;
   border-color: #CCCCCC;
-  color: #FFFFFF;
 }
 
 /* ---------------- 封面占位 ---------------- */
@@ -226,39 +227,83 @@
   background-color: transparent;
 }
 
-/* ---------------- chip / 词条 ---------------- */
+/* ---------------- chip / 词条 ----------------
+   点击区必须是 div（<text> 不响应 onclick），内层 text 只负责文字 */
 .chip {
-  height: 22px;
-  border-radius: 8px;
+  height: 26px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
   background-color: #FFFFFF;
   border: 1px solid #EEEEEE;
   padding-left: 8px;
   padding-right: 8px;
-  font-size: 12px;
-  line-height: 22px;
-  color: #333333;
-  text-align: center;
   margin-right: 4px;
   margin-bottom: 4px;
 }
+.chip-text {
+  font-size: 12px;
+  color: #333333;
+  text-align: center;
+}
 .chip-accent {
-  color: #2F84FE;
   border-color: #2F84FE;
 }
+.chip-accent .chip-text {
+  color: #2F84FE;
+}
 
-/* ---------------- 底部三宫格 ---------------- */
-.bottom-nav {
-  height: 44px;
+/* 历史记录「删除」小按钮（div 点击区） */
+.del-chip {
+  height: 26px;
+  justify-content: center;
+  align-items: center;
+  padding-left: 6px;
+  padding-right: 2px;
+}
+
+/* ---------------- 头部行（手环原生：返回块 + 标题，均在安全区内） ---------------- */
+.head-row {
+  height: 30px;
+  flex-direction: row;
+  align-items: center;
+}
+.back-chip {
+  height: 26px;
+  border-radius: 10px;
+  background-color: #FFFFFF;
+  border: 1px solid #EEEEEE;
+  justify-content: center;
+  align-items: center;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.back-text {
+  font-size: 12px;
+  color: #333333;
+  text-align: center;
+}
+.head-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #333333;
+  margin-left: 8px;
+}
+
+/* ---------------- 底部导航（随内容排布，不钉在屏幕底边） ---------------- */
+.nav-row {
+  height: 36px;
+  margin-top: 10px;
   flex-direction: row;
   align-items: center;
 }
 .nav-cell {
   flex: 1;
-  height: 44px;
+  height: 36px;
   justify-content: center;
   align-items: center;
 }
-.nav-label { font-size: 10px; color: #838383; }
+.nav-label { font-size: 12px; color: #838383; }
 .nav-label-on { color: #2F84FE; }
 
 /* ---------------- 通用 ---------------- */

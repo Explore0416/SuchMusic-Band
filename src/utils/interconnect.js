@@ -131,9 +131,15 @@ function createLink(opts) {
   var messageHandlers = [];
   var statusHandlers = [];
   var started = false;
+  var lastErrCode = 0;
 
   function emitStatus() {
-    var info = { state: fsm.state, connected: fsm.state === STATE.READY, reconnects: fsm.reconnects };
+    var info = {
+      state: fsm.state,
+      connected: fsm.state === STATE.READY,
+      reconnects: fsm.reconnects,
+      errCode: lastErrCode
+    };
     statusHandlers.forEach(function (h) { safeCall(h, info); });
   }
 
@@ -158,6 +164,7 @@ function createLink(opts) {
     };
     instance.onerror = function (err) {
       log('onerror code=' + (err && err.code));
+      lastErrCode = (err && err.code) || 0;
       fsm.transition('error');
       emitStatus();
     };

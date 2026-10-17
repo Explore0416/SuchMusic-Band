@@ -462,7 +462,12 @@ function createRpc(opts) {
         // BOOT / CONNECTING：断开或重连中，允许下一轮 HANDSHAKING 重新握手
         handshaking = false;
         ready = false;
-        state.set({ link: 'connecting' });
+        // 官方错误码 1001 = 手机 APP 未安装（interconnect 文档）；据此给出精确提示
+        if (info.errCode === 1001) {
+          state.set({ link: 'appMissing' });
+        } else {
+          state.set({ link: 'connecting' });
+        }
       }
     });
     state.set({ link: link.getState ? link.getState() : 'connecting' });

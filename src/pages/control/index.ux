@@ -1,19 +1,18 @@
 <template>
   <div class="page">
-    <!-- 顶部栏 -->
-    <div class="topbar">
-      <text class="topbar-back" onclick="back">返回</text>
-      <text class="topbar-title">正在播放</text>
-      <text class="meta">{{ modeGlyph }}</text>
+    <!-- 头部行：返回块（div 点击区） + 标题 -->
+    <div class="head-row">
+      <div class="back-chip" onclick="back"><text class="back-text">返回</text></div>
+      <text class="head-title">正在播放</text>
     </div>
 
     <!-- 曲目 -->
-    <div class="col" style="margin-top: 4px;">
+    <div class="col" style="margin-top: 6px;">
       <text class="title-h2 ellipsis center">{{ songName }}</text>
       <text class="caption ellipsis center mt4">{{ artistAlbum }}</text>
     </div>
 
-    <!-- 可点进度条 → playback.seek -->
+    <!-- 可点进度条 → playback.seek（点击区为 div） -->
     <div class="col mt8" onclick="onSeek">
       <div class="progress-track">
         <div class="progress-fill" style="width: {{ progressWidth }};"></div>
@@ -24,24 +23,30 @@
       </div>
     </div>
 
-    <!-- 三个大键（中文文本，避免符号字形在真机不渲染） -->
+    <!-- 三个大键（点击区均为 div，内层 text 只负责文字） -->
     <div class="row mt8" style="justify-content: space-around;">
-      <text class="tbtn" onclick="prev">上一首</text>
-      <text class="tbtn tbtn-primary {{ playing ? '' : 'tbtn-off' }}" onclick="toggle">{{ playing ? '暂停' : '播放' }}</text>
-      <text class="tbtn" onclick="next">下一首</text>
+      <div class="tbtn" onclick="prev"><text class="tbtn-text">上一首</text></div>
+      <div class="tbtn tbtn-primary {{ playing ? '' : 'tbtn-off' }}" onclick="toggle">
+        <text class="tbtn-text-inv">{{ playing ? '暂停' : '播放' }}</text>
+      </div>
+      <div class="tbtn" onclick="next"><text class="tbtn-text">下一首</text></div>
     </div>
 
-    <!-- 模式快捷切换 -->
+    <!-- 模式快捷切换（点击区均为 div） -->
     <div class="row mt8" style="justify-content: center;">
-      <text class="chip {{ mode === 'single' ? 'chip-accent' : '' }}" onclick="setSingle">单曲循环</text>
-      <text class="chip {{ mode === 'loop' ? 'chip-accent' : '' }}" onclick="setLoop">顺序</text>
-      <text class="chip {{ mode === 'shuffle' ? 'chip-accent' : '' }}" onclick="setShuffle">乱序</text>
+      <div class="chip {{ mode === 'single' ? 'chip-accent' : '' }}" onclick="setSingle">
+        <text class="chip-text">单曲循环</text>
+      </div>
+      <div class="chip {{ mode === 'loop' ? 'chip-accent' : '' }}" onclick="setLoop">
+        <text class="chip-text">顺序</text>
+      </div>
+      <div class="chip {{ mode === 'shuffle' ? 'chip-accent' : '' }}" onclick="setShuffle">
+        <text class="chip-text">乱序</text>
+      </div>
     </div>
-
-    <div class="grow"></div>
 
     <!-- 播放列表入口 -->
-    <div class="card-flat list-item" style="justify-content: center;" onclick="goMode">
+    <div class="card-flat list-item song-card" style="justify-content: center;" onclick="goMode">
       <text class="body">播放列表 {{ queueCount }} 首 · 当前 {{ currentIndexText }}</text>
     </div>
   </div>
@@ -55,6 +60,7 @@
 import router from '@system.router'
 import rpcMod from '../../utils/rpc.js'
 import state from '../../utils/state.js'
+import ui from '../../utils/ui.js'
 import format from '../../utils/format.js'
 import modeUtil from '../../utils/mode.js'
 import consts from '../../common/const.js'
@@ -104,21 +110,24 @@ export default {
     this.progressWidth = format.widthPercent(format.progressRatio(s.positionMs, s.durationMs))
   },
 
-  back() { router.back() },
-  goMode() { router.push({ uri: consts.ROUTES.MODE }) },
+  back() { console.log('[ui] control back'); router.back() },
+  goMode() { console.log('[ui] control goMode'); router.push({ uri: consts.ROUTES.MODE }) },
 
   toggle() {
+    console.log('[ui] control toggle, playing=' + this.playing)
+    if (ui.offlineToast(state)) { return }
     const rpc = rpcMod.getRpc()
     if (!rpc) { return }
     if (this.playing) { rpc.pause() } else { rpc.play() }
   },
-  prev() { const r = rpcMod.getRpc(); if (r) { r.prev() } },
-  next() { const r = rpcMod.getRpc(); if (r) { r.next() } },
+  prev() { console.log('[ui] control prev'); if (ui.offlineToast(state)) { return }; const r = rpcMod.getRpc(); if (r) { r.prev() } },
+  next() { console.log('[ui] control next'); if (ui.offlineToast(state)) { return }; const r = rpcMod.getRpc(); if (r) { r.next() } },
 
-  setLoop() { this._setMode('loop') },
-  setSingle() { this._setMode('single') },
-  setShuffle() { this._setMode('shuffle') },
+  setLoop() { console.log('[ui] control setLoop'); this._setMode('loop') },
+  setSingle() { console.log('[ui] control setSingle'); this._setMode('single') },
+  setShuffle() { console.log('[ui] control setShuffle'); this._setMode('shuffle') },
   _setMode(m) {
+    if (ui.offlineToast(state)) { return }
     const rpc = rpcMod.getRpc()
     if (rpc) { rpc.setMode(m) }
   },
@@ -128,6 +137,7 @@ export default {
    * 真机为拖动手势时，touches[0].clientX 给出坐标；无坐标信息则忽略。
    */
   onSeek(e) {
+    if (ui.offlineToast(state)) { return }
     const rpc = rpcMod.getRpc()
     if (!rpc || !this.durationMs) { return }
     let x = null
