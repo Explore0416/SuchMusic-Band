@@ -32,13 +32,17 @@
       </div>
     </div>
 
-    <!-- 主操作行：点击区均为 div；文案限 2 字，避免换行 -->
-    <div class="btn-row">
-      <div class="tbtn" onclick="prev"><text class="tbtn-text">上一</text></div>
-      <div class="tbtn tbtn-primary {{ playing ? '' : 'tbtn-off' }}" onclick="toggle">
-        <text class="tbtn-text-inv">{{ playing ? '暂停' : '播放' }}</text>
+    <!-- 主操作：大圆形播放键 -->
+    <div class="play-row">
+      <div class="play-btn {{ playing ? '' : 'play-btn-off' }}" onclick="toggle">
+        <text class="play-text">{{ playing ? '暂停' : '播放' }}</text>
       </div>
-      <div class="tbtn tbtn-last" onclick="next"><text class="tbtn-text">下一</text></div>
+    </div>
+
+    <!-- 上一 / 下一：大圆形按钮 -->
+    <div class="side-row">
+      <div class="side-btn" onclick="prev"><text class="side-text">上一</text></div>
+      <div class="side-btn" onclick="next"><text class="side-text">下一</text></div>
     </div>
 
     <!-- 导航行 -->
