@@ -4,7 +4,7 @@
     <div class="head-row">
       <div class="back-chip" onclick="back"><text class="back-text">返回</text></div>
       <text class="head-title">搜索</text>
-      <text class="head-side">{{ connected ? '已连' : '未连' }}</text>
+      <text class="head-side">{{ linkText }}</text>
     </div>
 
     <!-- 热搜（默认主路径，零输入） -->
@@ -57,6 +57,7 @@ import consts from '../../common/const.js'
 export default {
   data: {
     connected: false,
+    linkText: consts.TEXT.disconnected,
     hot: [],
     history: [],
     results: [],
@@ -97,6 +98,7 @@ export default {
   refresh() {
     const s = state.get()
     this.connected = s.link === 'ready'
+    this.linkText = consts.LINK_TEXT[s.link] || consts.TEXT.disconnected
     this.hot = s.searchHot.slice(0, 6)
     this.history = store.instance.getHistory()
     this.results = s.searchResults.map((r) => ({

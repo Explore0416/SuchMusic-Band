@@ -1,27 +1,35 @@
 <template>
   <div class="page">
-    <!-- 状态行：品牌 + 连接状态（固定宽度，避免挤压换行） -->
+
+    <!-- 标定探针：100/150/200px，用于测量 CSS px → 物理 px 映射 -->
+    <!-- 状态行：连接状态点 + 文案（右侧仅在启动异常时显示一行诊断） -->
     <div class="status-row">
-      <text class="brand-text">{{ brand }}</text>
       <div class="dot {{ connected ? 'dot-on' : 'dot-off' }}"></div>
-      <text class="link-text">{{ linkText }}</text>
+      <text class="status-text">{{ linkText }}</text>
+      <text class="status-right">{{ initError }}</text>
     </div>
 
-    <!-- 启动异常提示（正常为空，不占位） -->
-    <div class="status-row" if="{{ initError }}">
-      <text class="caption" style="color: #E94560;">{{ initError }}</text>
-    </div>
-
-    <!-- 歌曲卡（点击进入控制页） -->
-    <div class="card song-card" onclick="goControl">
-      <text class="cover">曲</text>
-      <div class="song-meta">
-        <text class="title-h2">{{ songName }}</text>
-        <text class="caption">{{ artistAlbum }}</text>
+    <!-- 主控制区：上一 / 播放暂停 / 下一（图标为 PNG，真机对符号字形渲染不可靠） -->
+    <div class="ctrl-row">
+      <div class="side-btn" onclick="prev">
+        <image class="ic-side" src="/common/ic_prev.png"></image>
+      </div>
+      <div class="main-btn {{ playing ? '' : 'main-btn-off' }}" onclick="toggle">
+        <image if="{{ playing }}" class="ic-main" src="/common/ic_pause.png"></image>
+        <image if="{{ !playing }}" class="ic-main-off" src="/common/ic_play.png"></image>
+      </div>
+      <div class="side-btn" onclick="next">
+        <image class="ic-side" src="/common/ic_next.png"></image>
       </div>
     </div>
 
-    <!-- 进度条 -->
+    <!-- 曲目信息（点击区为 div，进入控制页） -->
+    <div class="song-block" onclick="goControl">
+      <text class="song-title">{{ songName }}</text>
+      <text class="song-artist">{{ artistAlbum }}</text>
+    </div>
+
+    <!-- 进度 -->
     <div class="progress-wrap">
       <div class="progress-track">
         <div class="progress-fill" style="width: {{ progressWidth }};"></div>
@@ -32,24 +40,20 @@
       </div>
     </div>
 
-    <!-- 主操作：大圆形播放键 -->
-    <div class="play-row">
-      <div class="play-btn {{ playing ? '' : 'play-btn-off' }}" onclick="toggle">
-        <text class="play-text">{{ playing ? '暂停' : '播放' }}</text>
-      </div>
-    </div>
-
-    <!-- 上一 / 下一：大圆形按钮 -->
-    <div class="side-row">
-      <div class="side-btn" onclick="prev"><text class="side-text">上一</text></div>
-      <div class="side-btn" onclick="next"><text class="side-text">下一</text></div>
-    </div>
-
-    <!-- 导航行 -->
+    <!-- 底部导航 -->
     <div class="nav-row">
-      <div class="nav-cell" onclick="goSearch"><text class="nav-label">搜索</text></div>
-      <div class="nav-cell" onclick="goMode"><text class="nav-label">模式</text></div>
-      <div class="nav-cell" onclick="goLyric"><text class="nav-label">歌词</text></div>
+      <div class="nav-cell" onclick="goSearch">
+        <image class="ic-nav" src="/common/ic_search.png"></image>
+        <text class="nav-label">搜索</text>
+      </div>
+      <div class="nav-cell" onclick="goMode">
+        <image class="ic-nav" src="/common/ic_mode.png"></image>
+        <text class="nav-label">模式</text>
+      </div>
+      <div class="nav-cell" onclick="goLyric">
+        <image class="ic-nav" src="/common/ic_lyric.png"></image>
+        <text class="nav-label">歌词</text>
+      </div>
     </div>
   </div>
 </template>

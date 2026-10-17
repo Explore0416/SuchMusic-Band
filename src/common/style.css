@@ -1,107 +1,136 @@
 /*
- * style.css —— 手环端设计令牌 v3（小米手环 10：212×520 物理，designWidth=106）
+ * style.css —— 手环端设计令牌（对齐小米官方音乐控制卡片的视觉语言）
  *
- * 本版按用户反馈调整：**按钮更大、圆角更多、信息密度更低**。
- * 布局约束（Vela 运行时实测）：
- *   1. 不用 flex:1 / grow —— 该运行时不撑开，文本容器会塌成 1 字符宽（竖排）。
- *   2. 一律固定宽高；Vela 无 box-sizing，width 不含 padding，故内边距用子元素 margin。
- *   3. 内容区 92 宽（左右各 7），纵向节奏见各区块 margin。
- *   4. 点击区必须是 div；<text> 只承载文字。
+ * 物理 212×520，designWidth=106 ⇒ 1 逻辑单位 = 2 物理 px；此处数值均为逻辑值。
+ *
+ * 设计原则（v4）：
+ *   - 纯黑底 + 白色图标：OLED 省电、与系统音乐卡片同源，不"突兀"。
+ *   - 图标一律用 PNG（<image>），**不用符号字形**——真机对 ⏮⏸▶ 等字形渲染不可靠。
+ *   - **全部固定尺寸**：Vela 运行时 `flex:1` 不撑开，依赖它会塌成 1 字符宽（竖排）。
+ *   - 无 box-sizing / max-lines（Vela 不支持），内边距用子元素 margin 代替。
+ *   - 上下各留安全区，避开圆形表盘的圆角裁切。
  */
 
 .page {
   flex-direction: column;
-  background-color: #F1F2F4;
-  color: #333333;
+  background-color: #000000;
   padding-left: 7px;
   padding-right: 7px;
-  padding-top: 14px;
-  padding-bottom: 4px;
+  padding-top: 28px;
+  padding-bottom: 12px;
 }
 
-/* ---------------- 顶部状态行 ---------------- */
+/* ---------------- 状态行 ---------------- */
 .status-row {
   width: 92px;
-  height: 14px;
+  height: 12px;
   flex-direction: row;
-  align-items: center;
-}
-.brand-text {
-  width: 62px;
-  font-size: 10px;
-  font-weight: 600;
-  color: #333333;
-  text-overflow: ellipsis;
 }
 .dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 4px;
-  margin-left: 2px;
-  margin-right: 4px;
+  width: 5px;
+  height: 5px;
+  border-radius: 3px;
+  margin-top: 4px;
 }
-.dot-on { background-color: #2F84FE; }
-.dot-off { background-color: #C8C8C8; }
-.link-text {
-  width: 22px;
-  font-size: 8px;
-  color: #838383;
+.dot-on { background-color: #34C759; }
+.dot-off { background-color: #48484A; }
+.status-text {
+  width: 40px;
+  height: 12px;
+  margin-left: 4px;
+  font-size: 9px;
+  line-height: 12px;
+  color: #8A8A8E;
+}
+.status-right {
+  width: 46px;
+  height: 12px;
+  font-size: 9px;
+  line-height: 12px;
+  color: #8A8A8E;
   text-align: right;
 }
 
-/* ---------------- 卡片（大圆角） ---------------- */
-.card {
+/* ---------------- 主控制区 ---------------- */
+.ctrl-row {
   width: 92px;
-  height: 44px;
-  background-color: #FFFFFF;
-  border-radius: 14px;
+  height: 34px;
+  margin-top: 15px;
   flex-direction: row;
-  align-items: center;
 }
-.song-card { margin-top: 8px; }
-.cover {
-  width: 32px;
-  height: 32px;
-  margin-left: 6px;
-  border-radius: 10px;
+.side-btn {
+  width: 24px;
+  height: 24px;
+  margin-top: 5px;
+  border-radius: 12px;
+  background-color: #1C1C1E;
+}
+.main-btn {
+  width: 34px;
+  height: 34px;
+  margin-left: 4px;
+  margin-right: 4px;
+  border-radius: 17px;
   background-color: #2F84FE;
-  color: #FFFFFF;
-  font-size: 12px;
-  line-height: 32px;
-  text-align: center;
 }
-.song-meta {
-  width: 46px;
-  margin-left: 6px;
+.main-btn-off { background-color: #1C1C1E; }
+.ic-side {
+  width: 11px;
+  height: 11px;
+  margin-left: 7px;
+  margin-top: 7px;
+}
+.ic-main {
+  width: 15px;
+  height: 15px;
+  margin-left: 10px;
+  margin-top: 10px;
+}
+.ic-main-off {
+  width: 15px;
+  height: 15px;
+  margin-left: 11px;
+  margin-top: 10px;
+}
+
+/* ---------------- 曲目信息 ---------------- */
+.song-block {
+  width: 92px;
+  height: 30px;
+  margin-top: 14px;
   flex-direction: column;
 }
-.title-h2 {
-  width: 46px;
-  font-size: 10px;
-  line-height: 12px;
-  color: #333333;
+.song-title {
+  width: 92px;
+  height: 15px;
+  font-size: 11px;
+  line-height: 15px;
+  color: #FFFFFF;
+  text-align: center;
   text-overflow: ellipsis;
 }
-.caption {
-  width: 46px;
-  margin-top: 1px;
-  font-size: 7px;
-  line-height: 9px;
-  color: #838383;
+.song-artist {
+  width: 92px;
+  height: 12px;
+  margin-top: 3px;
+  font-size: 8px;
+  line-height: 12px;
+  color: #8A8A8E;
+  text-align: center;
   text-overflow: ellipsis;
 }
 
-/* ---------------- 进度条 ---------------- */
+/* ---------------- 进度 ---------------- */
 .progress-wrap {
   width: 92px;
-  margin-top: 8px;
-  flex-direction: column;
+  height: 16px;
+  margin-top: 10px;
 }
 .progress-track {
-  width: 92px;
+  width: 100%;
   height: 3px;
   border-radius: 2px;
-  background-color: #E4E6EA;
+  background-color: #2C2C2E;
 }
 .progress-fill {
   height: 3px;
@@ -109,301 +138,297 @@
   background-color: #2F84FE;
 }
 .time-row {
-  width: 92px;
-  margin-top: 2px;
-  height: 9px;
+  width: 100%;
+  height: 10px;
+  margin-top: 4px;
   flex-direction: row;
 }
 .time-text {
-  width: 46px;
-  height: 9px;
-  font-size: 7px;
-  color: #999999;
+  width: 50%;
+  height: 10px;
+  font-size: 8px;
+  line-height: 10px;
+  color: #636366;
 }
 .time-right { text-align: right; }
 
-/* ---------------- 大按钮：中央播放 44 圆形；两侧 38 圆形 ---------------- */
-.play-row {
-  width: 92px;
-  margin-top: 10px;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-}
-.play-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 22px;
-  background-color: #2F84FE;
-  justify-content: center;
-  align-items: center;
-}
-.play-btn-off { background-color: #C8C8C8; }
-.play-text {
-  font-size: 11px;
-  color: #FFFFFF;
-  text-align: center;
-}
-.side-row {
-  width: 92px;
-  margin-top: 6px;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-}
-.side-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 18px;
-  background-color: #FFFFFF;
-  border: 1px solid #E4E6EA;
-  justify-content: center;
-  align-items: center;
-  margin-left: 6px;
-  margin-right: 6px;
-}
-.side-text {
-  font-size: 9px;
-  color: #333333;
-  text-align: center;
-}
-
-/* 子页：三枚等宽圆形按钮（30×30） */
-.btn-row {
-  width: 92px;
-  margin-top: 10px;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-}
-.tbtn {
-  width: 30px;
-  height: 30px;
-  border-radius: 15px;
-  background-color: #FFFFFF;
-  border: 1px solid #E4E6EA;
-  justify-content: center;
-  align-items: center;
-  margin-left: 2px;
-  margin-right: 2px;
-}
-.tbtn-text {
-  font-size: 9px;
-  color: #333333;
-  text-align: center;
-}
-.tbtn-text-inv {
-  font-size: 9px;
-  color: #FFFFFF;
-  text-align: center;
-}
-.tbtn-primary {
-  background-color: #2F84FE;
-  border-color: #2F84FE;
-}
-.tbtn-off {
-  background-color: #C8C8C8;
-  border-color: #C8C8C8;
-}
-
-/* ---------------- 导航行（三个圆形块） ---------------- */
+/* ---------------- 底部导航 ---------------- */
 .nav-row {
   width: 92px;
-  margin-top: 8px;
+  height: 32px;
+  margin-top: 22px;
   flex-direction: row;
-  justify-content: center;
 }
 .nav-cell {
-  width: 28px;
-  height: 24px;
-  margin-left: 1px;
+  width: 30px;
+  height: 32px;
   margin-right: 1px;
-  border-radius: 12px;
-  background-color: #FFFFFF;
-  border: 1px solid #E4E6EA;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
+}
+.ic-nav {
+  width: 15px;
+  height: 15px;
+  margin-left: 7px;
+  margin-top: 4px;
 }
 .nav-label {
-  font-size: 8px;
-  color: #838383;
+  width: 30px;
+  height: 12px;
+  margin-top: 3px;
+  font-size: 7px;
+  line-height: 11px;
+  color: #8A8A8E;
   text-align: center;
 }
 
-/* ---------------- 子页头部 ---------------- */
+/* ============================================================
+ * 以下为二级页（控制 / 搜索 / 模式 / 歌词）通用样式，同样黑底
+ * ============================================================ */
+
+/* 头部：返回 + 标题 */
 .head-row {
   width: 92px;
-  height: 24px;
+  height: 16px;
   flex-direction: row;
-  align-items: center;
 }
 .back-chip {
-  width: 34px;
-  height: 22px;
-  border-radius: 11px;
-  background-color: #FFFFFF;
-  border: 1px solid #E4E6EA;
-  justify-content: center;
-  align-items: center;
+  width: 30px;
+  height: 16px;
+  border-radius: 8px;
+  background-color: #1C1C1E;
 }
 .back-text {
-  font-size: 9px;
-  color: #333333;
+  width: 30px;
+  height: 16px;
+  font-size: 8px;
+  line-height: 16px;
+  color: #FFFFFF;
   text-align: center;
 }
 .head-title {
-  width: 50px;
-  margin-left: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #333333;
-  text-overflow: ellipsis;
+  width: 58px;
+  height: 16px;
+  margin-left: 4px;
+  font-size: 11px;
+  line-height: 16px;
+  color: #FFFFFF;
+  text-align: right;
 }
 .head-side {
-  width: 26px;
+  width: 46px;
+  height: 16px;
+  margin-left: 4px;
   font-size: 8px;
-  color: #999999;
+  line-height: 16px;
+  color: #636366;
   text-align: right;
 }
 
-/* ---------------- 列表 ---------------- */
+/* 列表 */
 .list {
   width: 92px;
-  flex: 1;
 }
 .list-item {
   width: 92px;
-  height: 34px;
+  height: 26px;
+  margin-top: 3px;
+  border-radius: 9px;
+  background-color: #1C1C1E;
   flex-direction: row;
-  align-items: center;
-  border-bottom: 1px solid #F0F0F0;
+}
+.list-item-current {
+  background-color: #12233D;
 }
 .list-index {
-  width: 12px;
+  width: 14px;
+  height: 26px;
   font-size: 8px;
-  color: #999999;
+  line-height: 26px;
+  color: #636366;
+  text-align: center;
 }
 .list-main {
-  width: 62px;
+  width: 70px;
   flex-direction: column;
 }
 .list-title {
-  width: 62px;
-  font-size: 10px;
-  color: #333333;
+  width: 70px;
+  height: 14px;
+  margin-top: 2px;
+  font-size: 9px;
+  line-height: 14px;
+  color: #FFFFFF;
   text-overflow: ellipsis;
 }
 .list-sub {
-  width: 62px;
-  font-size: 8px;
-  color: #838383;
+  width: 70px;
+  height: 9px;
+  font-size: 7px;
+  line-height: 9px;
+  color: #8A8A8E;
   text-overflow: ellipsis;
 }
-.list-item-current .list-title { color: #2F84FE; font-weight: 500; }
 .current-bar {
-  width: 2px;
-  height: 16px;
+  width: 3px;
+  height: 14px;
+  margin-top: 6px;
+  border-radius: 2px;
   background-color: #2F84FE;
-  border-radius: 1px;
-  margin-right: 4px;
 }
 .current-bar-off { background-color: transparent; }
 
-/* ---------------- chip / 词条 ---------------- */
-.chip {
-  width: 44px;
-  height: 24px;
-  border-radius: 12px;
-  background-color: #FFFFFF;
-  border: 1px solid #E4E6EA;
-  justify-content: center;
-  align-items: center;
-  margin-right: 2px;
-  margin-bottom: 2px;
-}
-.chip-text {
-  width: 40px;
+/* 文本 */
+.caption {
   font-size: 8px;
-  color: #333333;
-  text-align: center;
-  text-overflow: ellipsis;
+  line-height: 12px;
+  color: #8A8A8E;
 }
-.chip-accent {
-  border-color: #2F84FE;
-  background-color: #EAF2FF;
-}
-.chip-accent .chip-text { color: #2F84FE; }
-.chip-wrap {
-  width: 92px;
-  margin-top: 4px;
-  flex-direction: row;
-  flex-wrap: wrap;
-}
-
-/* 历史记录「删除」小按钮 */
-.del-chip {
-  width: 22px;
-  height: 22px;
-  border-radius: 11px;
-  justify-content: center;
-  align-items: center;
-}
-.del-text {
+.meta {
   font-size: 8px;
-  color: #2F84FE;
-  text-align: center;
-}
-
-/* 模式选择行的圆点 */
-.pick {
-  width: 8px;
-  height: 8px;
-  border-radius: 4px;
-  border: 1px solid #C8C8C8;
-  margin-right: 6px;
-}
-.pick-on {
-  background-color: #2F84FE;
-  border-color: #2F84FE;
+  line-height: 12px;
+  color: #636366;
 }
 .body {
-  width: 44px;
-  font-size: 10px;
-  color: #333333;
-  text-overflow: ellipsis;
+  font-size: 9px;
+  line-height: 14px;
+  color: #FFFFFF;
 }
 .accent { color: #2F84FE; }
 .center { text-align: center; }
 .ellipsis { text-overflow: ellipsis; }
-.meta {
-  width: 32px;
+
+/* chip（模式切换等） */
+.chip {
+  height: 20px;
+  margin-right: 3px;
+  border-radius: 10px;
+  background-color: #1C1C1E;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+.chip-accent { background-color: #2F84FE; }
+.chip-text {
+  height: 20px;
   font-size: 8px;
-  color: #999999;
-  text-overflow: ellipsis;
+  line-height: 20px;
+  color: #FFFFFF;
+  text-align: center;
 }
 
-/* 扁平入口条（大圆角） */
-.card-flat {
+/* 搜索输入（只读，点按调起） */
+.search-box {
   width: 92px;
   height: 28px;
-  margin-top: 10px;
-  background-color: #FFFFFF;
+  margin-top: 8px;
   border-radius: 14px;
-  justify-content: center;
-  align-items: center;
+  background-color: #1C1C1E;
 }
-.card-flat-text {
-  width: 84px;
-  font-size: 8px;
-  color: #333333;
-  text-align: center;
-  text-overflow: ellipsis;
+.search-box-text {
+  width: 76px;
+  height: 28px;
+  margin-left: 8px;
+  font-size: 9px;
+  line-height: 28px;
+  color: #636366;
 }
 
-/* ---------------- 通用 ---------------- */
-.row { flex-direction: row; align-items: center; }
-.col { flex-direction: column; }
-.mt4 { margin-top: 4px; }
-.mt8 { margin-top: 8px; }
-.mt10 { margin-top: 10px; }
-.divider { width: 92px; height: 1px; background-color: #E4E6EA; }
+/* 分节小标题 */
+.section-title {
+  width: 92px;
+  height: 12px;
+  margin-top: 10px;
+  font-size: 8px;
+  line-height: 12px;
+  color: #636366;
+}
+
+/* 热搜 chip 容器 */
+.chip-wrap {
+  width: 92px;
+  margin-top: 5px;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+/* 纵向容器 */
+.col {
+  flex-direction: column;
+}
+
+/* 历史项删除块 */
+.del-chip {
+  width: 24px;
+  height: 26px;
+  border-radius: 8px;
+}
+.del-text {
+  width: 24px;
+  height: 26px;
+  font-size: 8px;
+  line-height: 26px;
+  color: #8A8A8E;
+  text-align: center;
+}
+
+/* 分隔线 */
+.divider {
+  width: 92px;
+  height: 1px;
+  background-color: #1C1C1E;
+}
+
+/* 模式页：单选指示 + 标签宽度 */
+.pick {
+  width: 10px;
+  height: 10px;
+  margin-left: 6px;
+  margin-top: 8px;
+  border-radius: 5px;
+  background-color: #2C2C2E;
+}
+.pick-on { background-color: #2F84FE; }
+.mode-label {
+  width: 50px;
+  height: 26px;
+  margin-left: 6px;
+  font-size: 9px;
+  line-height: 26px;
+  color: #FFFFFF;
+}
+.mode-state {
+  width: 26px;
+  height: 26px;
+  font-size: 7px;
+  line-height: 26px;
+  color: #2F84FE;
+  text-align: right;
+}
+
+/* 空状态 */
+.empty {
+  width: 92px;
+  height: 20px;
+  margin-top: 16px;
+  font-size: 9px;
+  line-height: 20px;
+  color: #48484A;
+  text-align: center;
+}
+
+/* 播放列表入口条 */
+.entry-bar {
+  width: 92px;
+  height: 30px;
+  margin-top: 12px;
+  border-radius: 15px;
+  background-color: #1C1C1E;
+}
+.entry-text {
+  width: 92px;
+  height: 30px;
+  font-size: 9px;
+  line-height: 30px;
+  color: #FFFFFF;
+  text-align: center;
+}
+

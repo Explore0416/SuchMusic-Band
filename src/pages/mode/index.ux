@@ -10,8 +10,8 @@
     <div class="col" style="margin-top: 8px;">
       <div class="list-item" for="{{ modes }}" onclick="choose($item.mode)">
         <div class="pick {{ $item.selected ? 'pick-on' : '' }}"></div>
-        <text class="body">{{ $item.label }}</text>
-        <text class="meta">{{ $item.selected ? '使用中' : '' }}</text>
+        <text class="mode-label">{{ $item.label }}</text>
+        <text class="mode-state">{{ $item.selected ? '使用中' : '' }}</text>
       </div>
     </div>
 
