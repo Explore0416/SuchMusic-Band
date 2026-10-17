@@ -13,14 +13,12 @@
     </div>
 
     <!-- 可点进度条 → playback.seek（点击区为 div） -->
-    <div class="progress-wrap" onclick="onSeek">
-      <div class="progress-track">
-        <div class="progress-fill" style="width: {{ progressWidth }};"></div>
-      </div>
-      <div class="time-row">
-        <text class="time-text">{{ positionText }}</text>
-        <text class="time-text time-right">{{ durationText }}</text>
-      </div>
+    <div class="progress-track" onclick="onSeek">
+      <div class="progress-fill" style="width: {{ progressWidth }};"></div>
+    </div>
+    <div class="time-row">
+      <text class="time-text">{{ positionText }}</text>
+      <text class="time-text time-right">{{ durationText }}</text>
     </div>
 
     <!-- 主控制区：上一 / 播放暂停 / 下一（图标 PNG） -->
