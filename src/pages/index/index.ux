@@ -103,7 +103,8 @@ export default {
     this.connected = s.link === 'ready'
     this.linkText = consts.LINK_TEXT[s.link] || consts.TEXT.disconnected
     this.playing = !!s.playing
-    this.initError = s.initError || ''
+    // 状态行空间有限（约 12 字），超长诊断只保留前 12 字，详细原因在手机端「设置→手环→诊断」查看
+    this.initError = s.initError ? String(s.initError).slice(0, 12) : ''
 
     if (s.song) {
       this.songName = format.ellipsize(s.song.name || consts.TEXT.emptySong, 20)
