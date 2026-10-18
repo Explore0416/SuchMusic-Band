@@ -27,7 +27,7 @@ var TEXT = {
   connected: '已连',
   disconnected: '未连',
   connecting: '连接中',
-  appMissing: '手机未装App',
+  appMissing: '未配对',
   liveTitle: '正在播放',
   emptySong: '暂无歌曲',
   emptyArtist: '—',

@@ -230,6 +230,13 @@ function createRpc(opts) {
     if (name === 'player.mode' && store) {
       store.setLastMode(payload.mode);
     }
+    // 手机端在节点就绪后主动推送链路状态（对齐官方示例的 pushConnectionState）。
+    // 收到 ready=true 即视为链路可用——这是比 getReadyState 更可靠的证据。
+    if (name === 'link.state') {
+      if (payload.ready) {
+        state.set({ link: 'ready' });
+      }
+    }
     state.applyEvent(name, payload);
     eventListeners.forEach(function (h) {
       try { h(name, payload); } catch (e) { log('listener error ' + e.message); }

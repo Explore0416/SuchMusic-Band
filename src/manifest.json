@@ -1,8 +1,8 @@
 {
   "package": "com.lightningteam.suchmusic",
   "name": "SuchMusic",
-  "versionName": "1.0.17",
-  "versionCode": 17,
+  "versionName": "1.0.18",
+  "versionCode": 18,
   "minPlatformVersion": 1000,
   "icon": "/common/logo.png",
   "deviceTypeList": [
@@ -27,7 +27,7 @@
     "designWidth": 106
   },
   "display": {
-    "backgroundColor": "#F1F2F4"
+    "backgroundColor": "#000000"
   },
   "router": {
     "entry": "pages/index",

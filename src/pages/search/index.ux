@@ -7,37 +7,87 @@
       <text class="head-side">{{ linkText }}</text>
     </div>
 
-    <!-- 热搜（默认主路径，零输入） -->
-    <text class="meta" style="margin-top: 8px;">热搜</text>
-    <div class="chip-wrap">
-      <div class="chip" for="{{ hot }}" onclick="searchHot($item)">
-        <text class="chip-text">{{ $item }}</text>
+    <!-- 输入框：点按弹出手环内置键盘（Vela 无系统输入法，快应用必须自绘键盘） -->
+    <div class="search-box" onclick="openKb">
+      <text class="search-box-text" if="{{ keyword }}">{{ keyword }}</text>
+      <text class="search-box-text search-ph" if="{{ !keyword }}">点此输入歌名</text>
+    </div>
+
+    <!-- ── 键盘模式 ── -->
+    <div class="kb" if="{{ kbOpen }}">
+      <div class="kb-row">
+        <div class="key" onclick="type('A')"><text class="key-text">A</text></div>
+        <div class="key" onclick="type('B')"><text class="key-text">B</text></div>
+        <div class="key" onclick="type('C')"><text class="key-text">C</text></div>
+        <div class="key" onclick="type('D')"><text class="key-text">D</text></div>
+        <div class="key" onclick="type('E')"><text class="key-text">E</text></div>
+      </div>
+      <div class="kb-row">
+        <div class="key" onclick="type('F')"><text class="key-text">F</text></div>
+        <div class="key" onclick="type('G')"><text class="key-text">G</text></div>
+        <div class="key" onclick="type('H')"><text class="key-text">H</text></div>
+        <div class="key" onclick="type('I')"><text class="key-text">I</text></div>
+        <div class="key" onclick="type('J')"><text class="key-text">J</text></div>
+      </div>
+      <div class="kb-row">
+        <div class="key" onclick="type('K')"><text class="key-text">K</text></div>
+        <div class="key" onclick="type('L')"><text class="key-text">L</text></div>
+        <div class="key" onclick="type('M')"><text class="key-text">M</text></div>
+        <div class="key" onclick="type('N')"><text class="key-text">N</text></div>
+        <div class="key" onclick="type('O')"><text class="key-text">O</text></div>
+      </div>
+      <div class="kb-row">
+        <div class="key" onclick="type('P')"><text class="key-text">P</text></div>
+        <div class="key" onclick="type('Q')"><text class="key-text">Q</text></div>
+        <div class="key" onclick="type('R')"><text class="key-text">R</text></div>
+        <div class="key" onclick="type('S')"><text class="key-text">S</text></div>
+        <div class="key" onclick="type('T')"><text class="key-text">T</text></div>
+      </div>
+      <div class="kb-row">
+        <div class="key" onclick="type('U')"><text class="key-text">U</text></div>
+        <div class="key" onclick="type('V')"><text class="key-text">V</text></div>
+        <div class="key" onclick="type('W')"><text class="key-text">W</text></div>
+        <div class="key" onclick="type('X')"><text class="key-text">X</text></div>
+        <div class="key" onclick="type('Y')"><text class="key-text">Y</text></div>
+      </div>
+      <div class="kb-row">
+        <div class="key" onclick="type('Z')"><text class="key-text">Z</text></div>
+        <div class="key key-wide" onclick="del"><text class="key-text-wide">删除</text></div>
+        <div class="key key-wide key-accent" onclick="submit"><text class="key-text-wide">搜索</text></div>
       </div>
     </div>
 
-    <!-- 最近搜索（手环历史 ≤5） -->
-    <text class="meta" style="margin-top: 6px;">最近</text>
-    <div class="col">
-      <div class="list-item" for="{{ history }}" onclick="searchHot($item)">
-        <text class="list-title">{{ $item }}</text>
-        <div class="del-chip" onclick="removeHistory($item)"><text class="del-text">删</text></div>
-      </div>
-    </div>
-
-    <div class="divider" style="margin-top: 4px;"></div>
-
-    <!-- 结果列表 -->
-    <text class="meta" style="margin-top: 4px;">结果（{{ results.length }}）</text>
-    <list class="list">
-      <list-item type="result" class="list-item" for="{{ results }}" onclick="playResult($index)">
-        <text class="list-index">{{ $index + 1 }}</text>
-        <div class="list-main">
-          <text class="list-title">{{ $item.name }}</text>
-          <text class="list-sub">{{ $item.artist }}</text>
+    <!-- ── 浏览模式：热搜 / 最近 / 结果 ── -->
+    <div class="col" if="{{ !kbOpen }}">
+      <text class="meta" style="margin-top: 8px;">热搜</text>
+      <div class="chip-wrap">
+        <div class="chip" for="{{ hot }}" onclick="searchHot($item)">
+          <text class="chip-text">{{ $item }}</text>
         </div>
-      </list-item>
-    </list>
-    <div class="meta" if="{{ results.length === 0 }}" style="margin-top: 4px;">{{ emptyText }}</div>
+      </div>
+
+      <text class="meta" style="margin-top: 6px;">最近</text>
+      <div class="col">
+        <div class="list-item" for="{{ history }}" onclick="searchHot($item)">
+          <text class="list-title">{{ $item }}</text>
+          <div class="del-chip" onclick="removeHistory($item)"><text class="del-text">删</text></div>
+        </div>
+      </div>
+
+      <div class="divider" style="margin-top: 4px;"></div>
+
+      <text class="meta" style="margin-top: 4px;">结果（{{ results.length }}）</text>
+      <list class="list">
+        <list-item type="result" class="list-item" for="{{ results }}" onclick="playResult($index)">
+          <text class="list-index">{{ $index + 1 }}</text>
+          <div class="list-main">
+            <text class="list-title">{{ $item.name }}</text>
+            <text class="list-sub">{{ $item.artist }}</text>
+          </div>
+        </list-item>
+      </list>
+      <div class="meta" if="{{ results.length === 0 }}" style="margin-top: 4px;">{{ emptyText }}</div>
+    </div>
   </div>
 </template>
 
@@ -61,6 +111,8 @@ export default {
     hot: [],
     history: [],
     results: [],
+    keyword: '',
+    kbOpen: false,
     emptyText: consts.TEXT.noResult
   },
 
@@ -73,6 +125,8 @@ export default {
       this._unsubEvt = rpc.onEvent((name, payload) => {
         if (name === 'search.preset' && payload && payload.keyword) {
           store.instance.pushHistory(payload.keyword)
+          this.keyword = payload.keyword
+          this.kbOpen = false
           this.refresh()
           this.doSearch(payload.keyword)
         }
@@ -108,10 +162,34 @@ export default {
     }))
   },
 
-  back() { console.log('[ui] search back'); router.back() },
+  back() {
+    if (this.kbOpen) { this.kbOpen = false; return }
+    console.log('[ui] search back')
+    router.back()
+  },
 
-  // 点选热搜/历史 → 搜索
+  openKb() {
+    this.kbOpen = true
+  },
+
+  type(ch) {
+    if (this.keyword.length >= 20) { return }
+    this.keyword = this.keyword + ch
+  },
+
+  del() {
+    this.keyword = this.keyword.slice(0, Math.max(0, this.keyword.length - 1))
+  },
+
+  submit() {
+    const kw = (this.keyword || '').trim()
+    if (!kw) { return }
+    this.kbOpen = false
+    this.doSearch(kw)
+  },
+
   searchHot(kw) {
+    this.keyword = kw
     this.doSearch(kw)
   },
 
@@ -138,7 +216,7 @@ export default {
     })
   },
 
-  // 选中结果 → 播放并回首页（协议缺口见 README 偏差 E1）
+  // 选中结果 → 播放并回首页
   playResult(index) {
     if (ui.offlineToast(state)) { return }
     const rpc = rpcMod.getRpc()

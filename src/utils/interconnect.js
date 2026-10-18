@@ -171,6 +171,13 @@ function createLink(opts) {
     instance.onmessage = function (res) {
       var data = res && res.data;
       var text = typeof data === 'string' ? data : JSON.stringify(data);
+      // 【权威连通证据】能收到手机端数据，说明链路已通。
+      // 部分机型/固件 getReadyState 长期返回 2（官方论坛亦提到「进入页面直接取状态
+      // 往往是 DISCONNECTED」），只信轮询会永远显示「未连」。以收包作为最高优先级信号。
+      if (fsm.state !== STATE.READY) {
+        fsm.state = STATE.READY;
+        emitStatus();
+      }
       messageHandlers.forEach(function (h) { safeCall(h, text); });
     };
   }
@@ -278,7 +285,14 @@ function createLink(opts) {
       }
       conn.send({
         data: sendAsObject ? text : String(text),
-        success: function () { if (cb) { cb({ ok: true }); } },
+        success: function () {
+          // 发送成功同样是链路可用的权威证据（见 onmessage 注释）
+          if (fsm.state !== STATE.READY) {
+            fsm.state = STATE.READY;
+            emitStatus();
+          }
+          if (cb) { cb({ ok: true }); }
+        },
         fail: function (err) { if (cb) { cb({ ok: false, error: 'E_LINK', detail: err }); } }
       });
     },
