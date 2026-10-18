@@ -50,7 +50,7 @@ jobs:
           mkdir -p sign
           printf '%s' "$BAND_SIGN_CERT_B64" | base64 -d > sign/certificate.pem
           printf '%s' "$BAND_SIGN_KEY_B64"  | base64 -d > sign/private.pem
-          echo "证书指纹（应 = 手机 App 的 8E:7C:55:...）:"
+          echo "证书指纹（必须与手机 App 的签名证书一致）:"
           openssl x509 -in sign/certificate.pem -noout -fingerprint -sha1
 
       # build.sh 内部：校验 manifest → 安装 hap 工具链 → hap build → 用 sign/*.pem 同源重签
